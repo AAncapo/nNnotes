@@ -3,6 +3,7 @@
     "name": "nNnotes",
     "slug": "nNnotes",
     "version": "1.0.0",
+    "scheme": "nNnotes",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,10 +20,23 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.aaancapo.nNnotes"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ed8643d9-dd2b-4a8c-ba6a-dd3864697f61"
+      }
     }
   }
 }
