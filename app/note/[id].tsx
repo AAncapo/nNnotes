@@ -18,11 +18,11 @@ import NoteToolbar from "@/components/NoteToolbar";
 import { AudioBlock } from "@/components/content-blocks/AudioBlock";
 import { ChecklistBlock } from "@/components/content-blocks/ChecklistBlock";
 import { TextBlock } from "@/components/content-blocks/TextBlock";
+import ImagesContainer from "@/components/ImagesContainer";
 import useNote from "@/hooks/useNote";
 import { ContentBlock, ContentType } from "@/types";
 import { convertAndFormatUTC } from "@/lib/utils";
 import useTheme from "@/lib/themes";
-import ImagesContainer from "@/components/ImagesContainer";
 
 // darkNoteBg gray-950
 
@@ -170,7 +170,7 @@ export default function NoteDetails() {
     [groupedContent]
   );
 
-  return id ? (
+  return id || id !== "new" ? (
     <SafeAreaView
       className={`flex-1`}
       style={{ backgroundColor: colorScheme?.secondary }}
@@ -184,7 +184,7 @@ export default function NoteDetails() {
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        className="flex-1 relative"
       >
         {/* Content */}
         <FlatList
@@ -199,17 +199,21 @@ export default function NoteDetails() {
           alwaysBounceVertical
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="flex-grow px-4"
-          ListFooterComponent={() => (
-            <Text
-              className="p-4 pt-20 text-center"
-              style={{ color: colorScheme!.text }}
-            >
-              Creado {convertAndFormatUTC(createdAt)}
-            </Text>
-          )}
+          ListFooterComponent={() =>
+            createdAt && (
+              <Text
+                className="p-4 pt-20 text-center"
+                style={{ color: colorScheme!.text }}
+              >
+                Creado {convertAndFormatUTC(createdAt)}
+              </Text>
+            )
+          }
         />
         {/* Toolbar */}
-        <NoteToolbar onOptionSelected={onToolbarOptionSelected} />
+        <View className="items-center mb-2">
+          <NoteToolbar onOptionSelected={onToolbarOptionSelected} />
+        </View>
       </KeyboardAvoidingView>
 
       {/* Modals */}

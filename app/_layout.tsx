@@ -27,6 +27,7 @@ export default function Layout() {
           name="note/[id]"
           options={{
             freezeOnBlur: true, // Mejorar rendimiento
+            navigationBarColor: colorScheme?.secondary,
           }}
         />
         <Stack.Screen
@@ -39,6 +40,13 @@ export default function Layout() {
           name="settings"
           options={{
             freezeOnBlur: true, // Mejorar rendimiento
+          }}
+        />
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            freezeOnBlur: true, // Mejorar rendimiento
+            navigationBarColor: colorScheme?.secondary,
           }}
         />
       </Stack>

@@ -16,6 +16,7 @@ function useNote(id?: string) {
   const [content, setContent] = useState<ContentBlock[]>([]);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [createdAt, setCreatedAt] = useState("");
+  const [note, setNote] = useState();
 
   useEffect(() => {
     if (!isNewNote) {
@@ -35,7 +36,7 @@ function useNote(id?: string) {
         });
       }
     }
-  }, [isNewNote]);
+  }, [isNewNote, id]);
 
   const handleGoBack = () => {
     if (isPlatformWeb) {
@@ -158,7 +159,7 @@ function useNote(id?: string) {
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      // allowsEditing: true,
       quality: 0.9,
     });
 

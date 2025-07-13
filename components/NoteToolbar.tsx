@@ -19,27 +19,27 @@ function NoteToolbar({ onOptionSelected }: ToolbarProps) {
   const colorScheme = useTheme(useColorScheme());
   return (
     <View
-      className={`h-16 flex-row items-center justify-around border-t p-4 py-0`}
+      className={`h-16 flex-row items-center justify-center rounded-full`}
       style={{ backgroundColor: colorScheme?.background }}
     >
       <TouchableOpacity
         disabled
         activeOpacity={0.2}
-        className="h-full flex-1 items-center justify-center"
+        className="h-full px-8 items-center justify-center"
         onPress={() => onOptionSelected(ContentType.CHECKLIST)}
       >
         <Ionicons name="list" size={24} color={colorScheme?.icons} />
       </TouchableOpacity>
       <TouchableOpacity
         activeOpacity={0.2}
-        className="h-full flex-1 items-center justify-center"
+        className="h-full px-8 items-center justify-center"
         onPress={() => onOptionSelected(ContentType.AUDIO)}
       >
         <Ionicons name="mic" size={24} color={colorScheme?.icons} />
       </TouchableOpacity>
       <TouchableOpacity
         activeOpacity={0.2}
-        className="h-full flex-1 items-center justify-center"
+        className="h-full px-8 items-center justify-center"
         onPress={() => onOptionSelected(ContentType.IMAGE)}
       >
         <Ionicons name="image" size={24} color={colorScheme?.icons} />

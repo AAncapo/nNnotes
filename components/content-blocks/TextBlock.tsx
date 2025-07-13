@@ -46,13 +46,13 @@ export function TextBlock({
       }
     }
   };
-  // console.log('isExpanded: ', block.props.isExpanded, 'isLast: ', isLast);
+
   const shouldExpand =
     (block.props.isExpanded && isLast) ||
     (block.props.isExpanded && isLast && isEmpty);
 
   return (
-    <View className={`${shouldExpand ? "min-h-screen" : ""}`}>
+    <View className={`flex-1 ${shouldExpand ? "min-h-screen" : ""}`}>
       <TextInput
         ref={textInputRef}
         className={`flex-1 text-lg ${shouldExpand && "min-h-screen"}`}

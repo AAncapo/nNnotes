@@ -7,13 +7,14 @@ import {
   FlatList,
   Text,
   View,
+  RefreshControl,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useNotesStore } from "@/store/useNotesStore";
 import { Note } from "@/types";
-import { getIconColor, isPlatformWeb } from "@/lib/utils";
+import { isPlatformWeb } from "@/lib/utils";
 import useTheme from "@/lib/themes";
 import NoteCard from "@/components/NoteCard";
 import NoteDetails from "./note/[id]";
@@ -21,8 +22,12 @@ import NoteDetails from "./note/[id]";
 export default function Notes() {
   const colorScheme = useTheme(useColorScheme());
   const marginTop = useSafeAreaInsets().top;
-  const { notes, updateNote, getAllTags } = useNotesStore();
+  const { notes, updateNote, getAllTags, syncNotes, loading } = useNotesStore();
   const [showDeleted, setShowDeleted] = useState<boolean>(false);
+
+  const onRefresh = useCallback(async () => {
+    await syncNotes();
+  }, []);
 
   const filteredNotes = useMemo(() => {
     return notes.filter((n) => (showDeleted ? n.isDeleted : !n.isDeleted));
@@ -62,12 +67,12 @@ export default function Notes() {
       router.push("/note/new");
     }
   };
-
+  console.log(`showing ${notes.filter((n) => !n.isDeleted).length} notes...`);
   return (
     <GestureHandlerRootView className={`flex-1 flex-row`}>
       {/* Notes list */}
       <View
-        className={`flex-1 ${isPlatformWeb && "w-3/12"}`}
+        className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
         style={{ backgroundColor: colorScheme?.background }}
       >
         <View className="p-2 pb-4 pt-4 gap-4" style={{ marginTop }}>
@@ -78,11 +83,16 @@ export default function Notes() {
             >
               nNnotas
             </Text>
-            <Ionicons
-              name="settings-outline"
-              size={20}
-              color={getIconColor(useColorScheme(), true)}
-            />
+            <TouchableOpacity
+              className="rounded-full p-4 items-center justify-center"
+              onPress={() => router.push("/settings")}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={20}
+                color={colorScheme?.icons}
+              />
+            </TouchableOpacity>
           </View>
 
           {/* <SearchBar onSubmit={addNote} /> */}
@@ -121,6 +131,9 @@ export default function Notes() {
             alwaysBounceVertical
             keyboardShouldPersistTaps="handled"
             contentContainerClassName={`flex-grow px-4`}
+            refreshControl={
+              <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+            }
           />
         </View>
         {isPlatformWeb ? (
@@ -128,7 +141,7 @@ export default function Notes() {
             <TouchableOpacity
               onPress={handleCreateNote}
               className="p-4 rounded-lg"
-              style={{ backgroundColor: colorScheme?.actionButton }}
+              style={{ backgroundColor: colorScheme?.button }}
             >
               <Text
                 className="text-xl text-center font-bold"
@@ -146,13 +159,13 @@ export default function Notes() {
         <TouchableOpacity
           activeOpacity={0.3}
           style={{
-            backgroundColor: colorScheme?.actionButton,
-            shadowColor: colorScheme?.actionButton,
+            backgroundColor: colorScheme?.button,
+            shadowColor: colorScheme?.button,
             shadowOffset: {
               width: 0,
               height: 0,
             },
-            elevation: 8,
+            elevation: 5,
             shadowOpacity: 0.7,
             shadowRadius: 10,
           }}

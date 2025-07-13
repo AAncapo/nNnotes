@@ -2,26 +2,18 @@ import { ColorSchemeName } from "react-native";
 
 export default function useTheme(colorScheme: ColorSchemeName) {
   if (!colorScheme) return;
-  return Colors[colorScheme];
+  return Colors(colorScheme);
 }
 
-const Colors = {
-  dark: {
-    background: "#111827",
-    secondary: "#030712",
-    actionButton: "white",
-    iconButton: "black",
-    text: "#f8fafc",
-    icons: "white",
-    checkbox: "white",
-  },
-  light: {
-    background: "#f8fafc",
-    secondary: "white",
-    text: "black",
-    icons: "black",
-    iconButton: "white",
-    actionButton: "black",
-    checkbox: "black",
-  },
+const Colors = (colorScheme: ColorSchemeName) => {
+  return {
+    background: colorScheme === "dark" ? "#111827" : "#f8fafc",
+    secondary: colorScheme === "dark" ? "#030712" : "white",
+    button: colorScheme === "dark" ? "white" : "black",
+    buttonText: colorScheme === "dark" ? "black" : "white",
+    iconButton: colorScheme === "dark" ? "black" : "white",
+    text: colorScheme === "dark" ? "#f8fafc" : "black",
+    icons: colorScheme === "dark" ? "white" : "black",
+    checkbox: colorScheme === "dark" ? "white" : "black",
+  };
 };
