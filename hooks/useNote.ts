@@ -30,7 +30,7 @@ function useNote(id?: string) {
           {
             text: "",
             placeholder: textPlaceholder,
-            isExpanded: true,
+            // isExpanded: true,
             focus: false,
           },
         ]);
@@ -97,9 +97,7 @@ function useNote(id?: string) {
         newBlocks = props.map((p) => ({
           id: getRandomID(),
           type,
-          props: {
-            ...p,
-          },
+          props: p,
         }));
         break;
       case ContentType.AUDIO:
@@ -122,17 +120,17 @@ function useNote(id?: string) {
     }
 
     // Shrink the previous last block if it was expanded (or any other expanded block)
-    const updatedContent = content.map((block) =>
-      block.props.isExpanded
-        ? { ...block, props: { ...block.props, isExpanded: false } }
-        : block
-    );
+    // const updatedContent = content.map((block) =>
+    //   block.props.isExpanded
+    //     ? { ...block, props: { ...block.props, isExpanded: false } }
+    //     : block
+    // );
 
-    let newContent: ContentBlock[] = [...updatedContent];
+    let newContent: ContentBlock[] = [...content];
 
     // Borra último block (anterior al nuevo) si es texto vacío
-    if (updatedContent.length > 0) {
-      const lastBlock = updatedContent[updatedContent.length - 1];
+    if (newContent.length > 0) {
+      const lastBlock = newContent[newContent.length - 1];
       if (
         lastBlock.type === ContentType.TEXT &&
         !lastBlock.props.text?.length
@@ -149,7 +147,7 @@ function useNote(id?: string) {
           id: Date.now().toString() + "new",
           type: ContentType.TEXT,
           props: {
-            isExpanded: true,
+            // isExpanded: true,
             focus: false,
             text: "",
             placeholder: "",
@@ -220,7 +218,7 @@ function useNote(id?: string) {
         {
           text: "",
           placeholder: textPlaceholder,
-          isExpanded: true,
+          // isExpanded: true,
           focus: false,
         },
       ]);

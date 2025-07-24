@@ -26,7 +26,7 @@ export interface ContentBlock {
 export interface BlockProps {
   text?: string;
   placeholder?: string;
-  isExpanded?: boolean;
+  // isExpanded?: boolean;
   focus?: boolean;
   title?: string;
   items?: ChecklistItem[];

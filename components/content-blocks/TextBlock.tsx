@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-import useTheme from "@/lib/themes";
 import { useEffect, useRef, useState } from "react";
 import {
   NativeSyntheticEvent,
@@ -8,7 +7,9 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+
 import { ContentBlock } from "types";
+import useTheme from "@/lib/themes";
 
 interface TextBlockProps {
   block: ContentBlock;
@@ -47,26 +48,24 @@ export function TextBlock({
     }
   };
 
-  const shouldExpand =
-    (block.props.isExpanded && isLast) ||
-    (block.props.isExpanded && isLast && isEmpty);
+  // const shouldExpand =
+  //   (block.props.isExpanded && isLast) ||
+  //   (block.props.isExpanded && isLast && isEmpty);
 
   return (
-    <View className={`flex-1 ${shouldExpand ? "min-h-screen" : ""}`}>
-      <TextInput
-        ref={textInputRef}
-        className={`flex-1 text-lg ${shouldExpand && "min-h-screen"}`}
-        style={{ color: colorScheme?.text }}
-        multiline
-        placeholder={isLast ? block.props.placeholder : ""}
-        placeholderTextColor={"gray"}
-        defaultValue={block.props.text}
-        onChangeText={(text) =>
-          onUpdate({ ...block, props: { ...block.props, text } })
-        }
-        onKeyPress={(e) => handleBackspacePress(e)}
-        textAlignVertical="top"
-      />
-    </View>
+    <TextInput
+      ref={textInputRef}
+      className={`text-lg h-fit`}
+      style={{ color: colorScheme?.text }}
+      multiline
+      placeholder={isLast ? block.props.placeholder : ""}
+      placeholderTextColor={"gray"}
+      defaultValue={block.props.text}
+      onChangeText={(text) =>
+        onUpdate({ ...block, props: { ...block.props, text } })
+      }
+      onKeyPress={(e) => handleBackspacePress(e)}
+      textAlignVertical="top"
+    />
   );
 }

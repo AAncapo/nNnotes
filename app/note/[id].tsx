@@ -21,7 +21,7 @@ import { TextBlock } from "@/components/content-blocks/TextBlock";
 import ImagesContainer from "@/components/ImagesContainer";
 import useNote from "@/hooks/useNote";
 import { ContentBlock, ContentType } from "@/types";
-import { convertAndFormatUTC } from "@/lib/utils";
+import { convertAndFormatUTC, isPlatformWeb } from "@/lib/utils";
 import useTheme from "@/lib/themes";
 
 // darkNoteBg gray-950
@@ -186,13 +186,13 @@ export default function NoteDetails() {
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 relative"
+        className={`flex-1 relative ${isPlatformWeb ? "flex-row" : ""}`}
       >
         {/* Content */}
         <FlatList
           data={groupedContent}
           renderItem={renderGroupedContentBlock}
-          keyExtractor={(item, index) => {
+          keyExtractor={(item) => {
             if (Array.isArray(item)) {
               return `image-group-${item[0].id}`;
             }
@@ -200,7 +200,7 @@ export default function NoteDetails() {
           }}
           alwaysBounceVertical
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="flex-grow px-4"
+          contentContainerClassName="px-4 flex-grow"
           ListFooterComponent={() =>
             createdAt && (
               <Text
@@ -213,7 +213,7 @@ export default function NoteDetails() {
           }
         />
         {/* Toolbar */}
-        <View className="items-center mb-2">
+        <View className="items-center">
           <NoteToolbar onOptionSelected={onToolbarOptionSelected} />
         </View>
       </KeyboardAvoidingView>
