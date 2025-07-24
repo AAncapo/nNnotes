@@ -1,8 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { Ionicons } from '@expo/vector-icons';
-import { Modal, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import {
+  Modal,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 
-import { ContentType } from '@/types';
+import { ContentType } from "@/types";
 
 interface BlockOptionsModalProps {
   type: ContentType;
@@ -12,14 +18,23 @@ interface BlockOptionsModalProps {
   onDelete: (id: string) => void;
 }
 
-function BlockOptionsModal({ id, visible, type, onClose, onDelete }: BlockOptionsModalProps) {
+function BlockOptionsModal({
+  id,
+  visible,
+  type,
+  onClose,
+  onDelete,
+}: BlockOptionsModalProps) {
   const colorScheme = useColorScheme();
   return (
     <Modal visible={visible} transparent onRequestClose={onClose}>
       <View className="flex-1 items-center justify-center">
         <View
-          className={`w-4/5 rounded-xl p-6 ${colorScheme === 'dark' ? 'bg-gray-800' : 'bg-slate-200'}`}
+          className={`w-4/5 rounded-xl p-6 ${colorScheme === "dark" ? "bg-gray-800" : "bg-slate-200"}`}
         >
+          <TouchableOpacity className="p-4" onPress={onClose}>
+            Close
+          </TouchableOpacity>
           <TouchableOpacity
             className="flex-row items-center justify-center gap-2"
             onPress={() => {

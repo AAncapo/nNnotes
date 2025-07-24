@@ -33,7 +33,9 @@ export function AudioBlock({
   const [sound, setSound] = useState<Audio.Sound>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
+  const [playRate, setPlayRate] = useState<number>(1);
 
+  // Carga el audio desde la memoria al reproducir por primera vez
   useEffect(() => {
     return sound
       ? () => {
@@ -42,6 +44,8 @@ export function AudioBlock({
       : undefined;
   }, [sound]);
 
+  // Play/Pause según audio actual para evitar overlaps
+  // Permite que el valor de audioPlaying lo haga reproducirse
   useEffect(() => {
     if (
       (audioPlaying !== block.id && isPlaying) ||
@@ -54,6 +58,7 @@ export function AudioBlock({
   const playSound = async () => {
     if (!block.props.uri) return;
 
+    // Only calls playbackStart if its neither playing or should play
     if (!isPlaying && audioPlaying !== block.id) {
       playbackStart(block.id);
     }
@@ -67,7 +72,7 @@ export function AudioBlock({
       } else {
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: block.props.uri },
-          { shouldPlay: true }
+          { shouldPlay: true, rate: playRate }
         );
         setSound(newSound);
         setIsPlaying(true);
@@ -104,6 +109,14 @@ export function AudioBlock({
     ? convertAndFormatUTC(block.props.createdAt)
     : undefined;
 
+  const changeRate = async () => {
+    if (sound) {
+      const newRate = playRate + 0.5 > 2 ? 1 : playRate + 0.5;
+      await sound.setRateAsync(newRate, true);
+      setPlayRate(newRate);
+    }
+  };
+
   return (
     <View className="my-4 rounded-3xl bg-gray-200 p-4">
       <View className="mb-1 flex-1 flex-row items-center justify-between">
@@ -129,7 +142,15 @@ export function AudioBlock({
             color={colorScheme?.iconButton}
           />
         </TouchableOpacity>
-        <View className="ml-4 h-1 flex-1 rounded-full bg-gray-300">
+        <TouchableOpacity
+          className="mx-2 px-2 border-2 border-slate-500 rounded-sm items-center"
+          onPress={changeRate}
+        >
+          <Text className="font-semibold text-slate-500 text-center">
+            x{playRate}
+          </Text>
+        </TouchableOpacity>
+        <View className="h-1 flex-1 rounded-full bg-gray-300">
           <View
             className="h-full flex-1 rounded-full bg-black"
             style={{ width: `${progress}%` }}
