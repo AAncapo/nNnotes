@@ -87,7 +87,8 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     try {
       set({ loading: true });
 
-      const user = useAuthStore.getState().user;
+      const user = await useAuthStore.getState().getUser();
+      // const user = useAuthStore.getState().user;
       if (!user) {
         Alert.alert(
           "Usuario no autenticado",

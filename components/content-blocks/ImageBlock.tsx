@@ -25,10 +25,13 @@ export function ImageBlock({
         { width: maxPerRow === 3 ? "33%" : "25%" },
       ]}
     >
-      <TouchableOpacity onPress={() => onSelected(index)}>
+      <TouchableOpacity
+        onPress={() => onSelected(index)}
+        className="w-full h-full"
+      >
         <Image
           source={{ uri: block.props.uri }}
-          style={styles.image}
+          className="w-full h-full rounded-sm"
           resizeMode="cover"
         />
         {isOverflow && (
@@ -47,7 +50,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     padding: 2,
   },
-  image: { width: "100%", height: "100%", borderRadius: 4 },
   overflowOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.6)",

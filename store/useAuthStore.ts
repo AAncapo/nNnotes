@@ -28,8 +28,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } = await supabase.auth.getUser();
 
     if (error) {
-      Alert.alert(error.name, error.message);
-      return null;
+      throw new Error(error.message);
+
+      // Alert.alert(error.name, error.message);
+      // return null;
     }
     return user;
   },
@@ -57,7 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data.user) {
         const user = data.user;
         set({ user });
-        await storeData(STORAGE_KEY, { user: user });
+        await storeData(STORAGE_KEY, { user });
       }
     } catch (error: any) {
       set({ error: error.message });
@@ -83,7 +85,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data.user) {
         const user = data.user;
         set({ user });
-        await storeData(STORAGE_KEY, { user: user });
+        await storeData(STORAGE_KEY, { user });
       }
     } catch (error: any) {
       set({ error: error.message });

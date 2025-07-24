@@ -136,6 +136,8 @@ export default function Notes() {
             }
           />
         </View>
+
+        {/* (Web) Create new note button */}
         {isPlatformWeb ? (
           <View className="p-8">
             <TouchableOpacity
@@ -153,7 +155,9 @@ export default function Notes() {
           </View>
         ) : null}
       </View>
+
       {isPlatformWeb && <NoteDetails />}
+
       {/* FAB */}
       {!isPlatformWeb && (
         <TouchableOpacity

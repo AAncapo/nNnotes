@@ -1,10 +1,7 @@
-/* eslint-disable prettier/prettier */
-import { Modal, TouchableOpacity, useColorScheme, View } from "react-native";
+import { Modal, View } from "react-native";
 import { ImageBlock } from "./content-blocks/ImageBlock";
 import { ContentBlock } from "@/types";
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import useTheme from "@/lib/themes";
 import { ImageViewer } from "./ImageViewer";
 
 interface ImagesContainerProps {
@@ -30,7 +27,6 @@ function ImagesContainer({
   };
 
   const renderImage = (img: ContentBlock, index: number) => {
-    // const isLastInRow = index === maxPerRow - 1;
     const isOverflow = index === maxPerRow - 1 && images.length > maxPerRow;
 
     return (
@@ -45,6 +41,7 @@ function ImagesContainer({
       />
     );
   };
+
   return (
     <>
       <View className="flex-row flex-wrap my-4">

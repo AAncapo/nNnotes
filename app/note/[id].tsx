@@ -47,7 +47,7 @@ export default function NoteDetails() {
     useState<boolean>(false);
   const [optionsId, setOptionsId] = useState<string | null>(null);
 
-  // Handle hardware back button press
+  // Handle hardware BACK button press
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -170,7 +170,9 @@ export default function NoteDetails() {
     [groupedContent]
   );
 
-  return id || id !== "new" ? (
+  console.log(`id: ${id}`);
+
+  return id !== undefined ? (
     <SafeAreaView
       className={`flex-1`}
       style={{ backgroundColor: colorScheme?.secondary }}

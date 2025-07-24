@@ -16,7 +16,6 @@ function useNote(id?: string) {
   const [content, setContent] = useState<ContentBlock[]>([]);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [createdAt, setCreatedAt] = useState("");
-  const [note, setNote] = useState();
 
   useEffect(() => {
     if (!isNewNote) {
@@ -161,6 +160,7 @@ function useNote(id?: string) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       // allowsEditing: true,
       quality: 0.9,
+      // allowsMultipleSelection: true,
     });
 
     if (!result.canceled) {
