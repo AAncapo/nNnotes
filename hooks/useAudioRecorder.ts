@@ -1,10 +1,8 @@
-/* eslint-disable prettier/prettier */
-import { Audio } from 'expo-av';
-import { useEffect, useState } from 'react';
+import { Audio } from "expo-av";
+import { useEffect, useState } from "react";
 
 export default function useRecorder() {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  // const [audioUri, setAudioUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -43,7 +41,7 @@ export default function useRecorder() {
       }, 1000);
       setTimer(interval);
     } catch (err) {
-      console.error('Failed to start recording', err);
+      console.error("Failed to start recording", err);
     }
   };
 
@@ -54,7 +52,7 @@ export default function useRecorder() {
       setIsPaused(true);
       if (timer) clearInterval(timer);
     } catch (err) {
-      console.error('Failed to pause recording', err);
+      console.error("Failed to pause recording", err);
     }
   };
 
@@ -68,7 +66,7 @@ export default function useRecorder() {
       }, 1000);
       setTimer(interval);
     } catch (err) {
-      console.error('Failed to resume recording', err);
+      console.error("Failed to resume recording", err);
     }
   };
 
@@ -83,7 +81,7 @@ export default function useRecorder() {
       setDuration(0);
       if (timer) clearInterval(timer);
     } catch (err) {
-      console.error('Failed to stop recording', err);
+      console.error("Failed to stop recording", err);
     }
   };
 

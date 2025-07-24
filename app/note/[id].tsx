@@ -46,6 +46,7 @@ export default function NoteDetails() {
   const [optionsModalVisible, setOptionsModalVisible] =
     useState<boolean>(false);
   const [optionsId, setOptionsId] = useState<string | null>(null);
+  const [audioPlaying, setAudioPlaying] = useState<string>();
 
   // Handle hardware BACK button press
   useEffect(() => {
@@ -71,6 +72,7 @@ export default function NoteDetails() {
         addNewContentBlock(ContentType.CHECKLIST, [{ items: [], title: "" }]);
         break;
       case ContentType.AUDIO:
+        setAudioPlaying(undefined);
         setIsRecordingModalVisible(true);
         break;
       case ContentType.IMAGE:
@@ -109,6 +111,23 @@ export default function NoteDetails() {
     return groupedBlocks;
   };
 
+  const handleAudioPlay = (id: string) => setAudioPlaying(id);
+
+  const handleAudioEnd = (id: string) => {
+    const nextIndex = content.findIndex((b) => b.id === id) + 1;
+
+    // Al terminar un audio comienza a reproducir el siquiente
+    if (
+      nextIndex < content.length &&
+      content[nextIndex].type === ContentType.AUDIO
+    ) {
+      setAudioPlaying(content[nextIndex].id);
+      return;
+    }
+
+    setAudioPlaying(undefined);
+  };
+
   const groupedContent = useMemo(
     () => groupConsecutiveImages(content),
     [content]
@@ -129,7 +148,7 @@ export default function NoteDetails() {
             key={`image-group-${blockOrGroup[0].id}`}
             images={blockOrGroup}
             onDelete={handleDeleteBlock}
-            maxPerRow={4} // o 4 según prefieras
+            maxPerRow={4}
           />
         );
       }
@@ -159,7 +178,10 @@ export default function NoteDetails() {
           return (
             <AudioBlock
               key={blockOrGroup.id}
+              audioPlaying={audioPlaying}
               block={blockOrGroup}
+              playbackStart={handleAudioPlay}
+              playbackEnd={handleAudioEnd}
               openOptions={handleOpenOptionsModal}
             />
           );
@@ -167,7 +189,7 @@ export default function NoteDetails() {
           return null;
       }
     },
-    [groupedContent]
+    [groupedContent, audioPlaying]
   );
 
   console.log(`id: ${id}`);

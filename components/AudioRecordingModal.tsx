@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
@@ -70,6 +69,7 @@ export function AudioRecordingModal({
           <View className="mb-6 items-center">
             <TextInput
               className="mb-2 w-full rounded-md border border-slate-200 p-2 text-center text-xl"
+              style={{ color: colorScheme?.text }}
               placeholder="Título"
               placeholderTextColor={"#eee"}
               onChangeText={setTitle}

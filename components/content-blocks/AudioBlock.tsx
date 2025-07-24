@@ -16,10 +16,19 @@ import useTheme from "@/lib/themes";
 
 interface AudioBlockProps {
   block: ContentBlock;
+  audioPlaying?: string;
+  playbackStart: (id: string) => void;
+  playbackEnd: (id: string) => void;
   openOptions: (id: string) => void;
 }
 
-export function AudioBlock({ block, openOptions }: AudioBlockProps) {
+export function AudioBlock({
+  block,
+  audioPlaying,
+  playbackStart,
+  playbackEnd,
+  openOptions,
+}: AudioBlockProps) {
   const colorScheme = useTheme(useColorScheme());
   const [sound, setSound] = useState<Audio.Sound>();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -33,16 +42,27 @@ export function AudioBlock({ block, openOptions }: AudioBlockProps) {
       : undefined;
   }, [sound]);
 
+  useEffect(() => {
+    if (
+      (audioPlaying !== block.id && isPlaying) ||
+      (audioPlaying === block.id && !isPlaying)
+    ) {
+      playSound();
+    }
+  }, [audioPlaying]);
+
   const playSound = async () => {
     if (!block.props.uri) return;
 
+    if (!isPlaying && audioPlaying !== block.id) {
+      playbackStart(block.id);
+    }
+
     try {
       if (sound) {
-        if (isPlaying) {
-          await sound.pauseAsync();
-        } else {
-          await sound.playAsync();
-        }
+        if (isPlaying) await sound.pauseAsync();
+        else await sound.playAsync();
+
         setIsPlaying(!isPlaying);
       } else {
         const { sound: newSound } = await Audio.Sound.createAsync(
@@ -56,6 +76,7 @@ export function AudioBlock({ block, openOptions }: AudioBlockProps) {
           if (status.isLoaded) {
             setPosition(status.positionMillis);
             if (status.didJustFinish) {
+              playbackEnd(block.id);
               setIsPlaying(false);
               setPosition(0);
             }
