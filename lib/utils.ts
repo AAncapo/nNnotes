@@ -7,6 +7,9 @@ export const getIconColor = (
   disabled?: boolean
 ) => (disabled ? "#eee" : colorScheme === "dark" ? "white" : "#1f2937");
 
+export const getRandomID = () =>
+  `${Date.now() + Math.abs(Math.random() * 1000)}`;
+
 export function convertAndFormatUTC(utcDateTime: string, options = {}) {
   try {
     const date = new Date(utcDateTime);

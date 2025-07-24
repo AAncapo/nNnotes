@@ -68,7 +68,7 @@ export default function NoteDetails() {
   const onToolbarOptionSelected = (type: ContentType) => {
     switch (type) {
       case ContentType.CHECKLIST:
-        addNewContentBlock(ContentType.CHECKLIST, { items: [], title: "" });
+        addNewContentBlock(ContentType.CHECKLIST, [{ items: [], title: "" }]);
         break;
       case ContentType.AUDIO:
         setIsRecordingModalVisible(true);
@@ -225,7 +225,7 @@ export default function NoteDetails() {
         onSave={(props) => {
           setIsRecordingModalVisible(false);
 
-          addNewContentBlock(ContentType.AUDIO, props);
+          addNewContentBlock(ContentType.AUDIO, [props]);
         }}
       />
       <BlockOptionsModal

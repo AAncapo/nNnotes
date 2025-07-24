@@ -1,11 +1,10 @@
-/* eslint-disable prettier/prettier */
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { useNotesStore } from "@/store/useNotesStore";
 import { BlockProps, ContentBlock, ContentType } from "@/types";
-import { isPlatformWeb } from "@/lib/utils";
+import { getRandomID, isPlatformWeb } from "@/lib/utils";
 
 const textPlaceholder = "Comienza a escribir ...";
 
@@ -27,12 +26,14 @@ function useNote(id?: string) {
       }
     } else {
       if (content.length === 0) {
-        addNewContentBlock(ContentType.TEXT, {
-          text: "",
-          placeholder: textPlaceholder,
-          isExpanded: true,
-          focus: false,
-        });
+        addNewContentBlock(ContentType.TEXT, [
+          {
+            text: "",
+            placeholder: textPlaceholder,
+            isExpanded: true,
+            focus: false,
+          },
+        ]);
       }
     }
   }, [isNewNote, id]);
@@ -66,49 +67,55 @@ function useNote(id?: string) {
 
   const addNewContentBlock = (
     type: ContentType,
-    { ...props }: Partial<BlockProps> | undefined
+    props: Partial<BlockProps>[]
   ) => {
-    let newBlock: ContentBlock | null = null;
+    let newBlocks: ContentBlock[] = [];
     switch (type) {
       case ContentType.TEXT:
-        newBlock = {
-          id: Date.now().toString(),
-          type,
-          props: {
-            ...props,
+        newBlocks = [
+          {
+            id: getRandomID(),
+            type,
+            props: {
+              ...props[0],
+            },
           },
-        };
+        ];
         break;
       case ContentType.CHECKLIST:
-        newBlock = {
-          id: Date.now().toString(),
-          type,
-          props: {
-            items: [{ id: Date.now().toString(), text: "", checked: false }],
+        newBlocks = [
+          {
+            id: getRandomID(),
+            type,
+            props: {
+              items: [{ id: getRandomID(), text: "", checked: false }],
+            },
           },
-        };
+        ];
         break;
       case ContentType.IMAGE:
-        newBlock = {
-          id: Date.now().toString(),
+        newBlocks = props.map((p) => ({
+          id: getRandomID(),
           type,
           props: {
-            ...props,
+            ...p,
           },
-        };
+        }));
         break;
       case ContentType.AUDIO:
-        console.log("saving audio...", props.uri);
-        newBlock = {
-          id: Date.now().toString(),
-          type,
-          props: {
-            title: props.title,
-            uri: props.uri,
-            duration: props.duration,
-            createdAt: new Date().toISOString(),
+        console.log("saving audio...", props[0].uri);
+        newBlocks = [
+          {
+            id: getRandomID(),
+            type,
+            props: {
+              title: props[0].title,
+              uri: props[0].uri,
+              duration: props[0].duration,
+              createdAt: new Date().toISOString(),
+            },
           },
-        };
+        ];
         break;
       default:
         break;
@@ -134,8 +141,8 @@ function useNote(id?: string) {
       }
     }
 
-    if (newBlock) {
-      newContent.push(newBlock);
+    if (newBlocks.length > 0) {
+      newContent = [...newContent, ...newBlocks];
       if (type !== ContentType.TEXT) {
         // Añade un text seguido del block si el añadido no es tipo text
         newContent.push({
@@ -160,14 +167,17 @@ function useNote(id?: string) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       // allowsEditing: true,
       quality: 0.9,
-      // allowsMultipleSelection: true,
+      allowsMultipleSelection: true,
     });
 
     if (!result.canceled) {
-      addNewContentBlock(ContentType.IMAGE, {
-        text: "Image",
-        uri: result.assets[0].uri,
-      });
+      addNewContentBlock(
+        ContentType.IMAGE,
+        result.assets.map((asset) => ({
+          text: "Image",
+          uri: asset.uri,
+        }))
+      );
     }
   };
 
@@ -206,12 +216,14 @@ function useNote(id?: string) {
     if (newContent.length === 0) {
       // Si block borrado es el primero y la nota va a quedar vacia add texto default
       // Esto no debería suceder ya que siempre habrá una nota de texto al final
-      addNewContentBlock(ContentType.TEXT, {
-        text: "",
-        placeholder: textPlaceholder,
-        isExpanded: true,
-        focus: false,
-      });
+      addNewContentBlock(ContentType.TEXT, [
+        {
+          text: "",
+          placeholder: textPlaceholder,
+          isExpanded: true,
+          focus: false,
+        },
+      ]);
     }
 
     setContent(newContent);
