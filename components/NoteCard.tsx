@@ -14,12 +14,6 @@ import { ContentType, Note } from "@/types";
 import { convertAndFormatUTC, isPlatformWeb } from "@/lib/utils";
 import useTheme from "@/lib/themes";
 
-// type NotePreview = {
-//   icon: string;
-//   title: string;
-//   subtitle: string;
-// };
-
 interface NoteCardProps {
   note: Note;
   onDelete: (id: string) => void;
@@ -60,30 +54,7 @@ function NoteCard({ note, onDelete, onLongPress }: NoteCardProps) {
         return "<unknown>";
     }
     // <MaterialIcons name="music-note" size={24} color="black" />;
-  }, []);
-
-  // const renderPreviewIcon = ({
-  //   size = 24,
-  //   color = colorScheme!.icons,
-  // }: {
-  //   size: number;
-  //   color: string;
-  // }) => {
-  //   const cblock = note.content.length > 0 ? note.content[0] : null;
-  //   if (!cblock) return null;
-  //   switch (cblock.type) {
-  //     case ContentType.CHECKLIST:
-  //       return <FontAwesome5 name="tasks" size={size} color={color} />;
-  //     case ContentType.IMAGE:
-  //       return <FontAwesome name="photo" size={size} color={color} />;
-  //     case ContentType.AUDIO:
-  //       return (
-  //         <Ionicons name="musical-notes-sharp" size={size} color={color} />
-  //       );
-  //     default:
-  //       return null;
-  //   }
-  // };
+  }, [note]);
 
   const updatedAt = convertAndFormatUTC(note.updatedAt);
 
@@ -105,19 +76,12 @@ function NoteCard({ note, onDelete, onLongPress }: NoteCardProps) {
         >
           {note.title === "" ? renderSubtitle : note.title}
         </Text>
-        {/* Subtitle */}
-        {/* <View className="flex-row space-x-2 items-center">
-          <View className="opacity-30">
-            {renderPreviewIcon({ size: 12, color: colorScheme!.icons })}
-          </View> */}
         <Text
           className={`max-h-16 text-sm ${useColorScheme() === "dark" ? "text-gray-400" : "text-gray-500"} flex text-ellipsis line-clamp-2 overflow-hidden`}
         >
           {renderSubtitle}
         </Text>
-        {/* </View> */}
         <View className="flex-row justify-between">
-          {/* UpdatedAt */}
           <Text
             className={`py-1 pt-2 text-xs ${useColorScheme() === "dark" ? "text-gray-500" : "text-gray-400"} line-clamp-1 overflow-clip`}
           >

@@ -1,20 +1,23 @@
 import { Modal, View } from "react-native";
 import { ImageBlock } from "./content-blocks/ImageBlock";
-import { ContentBlock } from "@/types";
+import { BlockProps, ContentBlock } from "@/types";
 import { useState } from "react";
-import { ImageViewer } from "./ImageViewer";
+import ImageViewer from "./ImageViewer";
 
 interface ImagesContainerProps {
   images: ContentBlock[];
   maxPerRow: 3 | 4;
-  // openOptions: (id: string) => void;
+  // onEditProp: (id: string, name: string) => void;
+  onUpdate: (contentBlock: ContentBlock) => void;
+
   onDelete: (id: string) => void;
 }
 
 function ImagesContainer({
   images,
   maxPerRow,
-  // openOptions,
+  // onEditProp,
+  onUpdate,
   onDelete,
 }: ImagesContainerProps) {
   // const colorScheme = useTheme(useColorScheme());
@@ -51,7 +54,9 @@ function ImagesContainer({
         <ImageViewer
           images={images}
           initialIndex={selectedIndex}
-          onDelete={(index) => onDelete(images[index].id)}
+          // editProp={onEditProp}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
           onClose={() => setFullscreenVisible(false)}
         />
       </Modal>

@@ -94,6 +94,14 @@ export function AudioBlock({
     }
   };
 
+  const changeRate = async () => {
+    if (sound) {
+      const newRate = playRate + 0.5 > 2 ? 1 : playRate + 0.5;
+      await sound.setRateAsync(newRate, true);
+      setPlayRate(newRate);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -105,17 +113,9 @@ export function AudioBlock({
   const durationMillis = (block.props.duration || 0) * 1000;
   const progress = durationMillis > 0 ? (position / durationMillis) * 100 : 0;
 
-  const createdAt = block.props.createdAt
-    ? convertAndFormatUTC(block.props.createdAt)
-    : undefined;
-
-  const changeRate = async () => {
-    if (sound) {
-      const newRate = playRate + 0.5 > 2 ? 1 : playRate + 0.5;
-      await sound.setRateAsync(newRate, true);
-      setPlayRate(newRate);
-    }
-  };
+  const createdAt =
+    (block.props.createdAt && convertAndFormatUTC(block.props.createdAt)) ||
+    undefined;
 
   return (
     <View className="my-4 rounded-3xl bg-gray-200 p-4">
@@ -123,16 +123,26 @@ export function AudioBlock({
         <Text className="text-md text-ellipsis ps-2" numberOfLines={1}>
           {block.props.title || createdAt || ""}
         </Text>
-        <TouchableOpacity
-          className="ml-4"
-          onPress={() => openOptions(block.id)}
-        >
-          <Ionicons
-            name="ellipsis-horizontal-sharp"
-            size={18}
-            color={colorScheme?.iconButton}
-          />
-        </TouchableOpacity>
+        <View className="flex-row space-x-4 items-center">
+          <TouchableOpacity
+            className="px-2 border-2 border-slate-500 rounded-xs items-center"
+            onPress={changeRate}
+          >
+            <Text className="font-bold text-slate-500 text-center">
+              x{playRate}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="ml-4"
+            onPress={() => openOptions(block.id)}
+          >
+            <Ionicons
+              name="ellipsis-horizontal-sharp"
+              size={18}
+              color={colorScheme?.iconButton}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       <View className="flex-1 flex-row items-center">
         <TouchableOpacity className="rounded-full" onPress={playSound}>
@@ -142,18 +152,11 @@ export function AudioBlock({
             color={colorScheme?.iconButton}
           />
         </TouchableOpacity>
-        <TouchableOpacity
-          className="mx-2 px-2 border-2 border-slate-500 rounded-sm items-center"
-          onPress={changeRate}
-        >
-          <Text className="font-semibold text-slate-500 text-center">
-            x{playRate}
-          </Text>
-        </TouchableOpacity>
+
         <View className="h-1 flex-1 rounded-full bg-gray-300">
           <View
             className="h-full flex-1 rounded-full bg-black"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </View>
         <Text className="ml-2 text-sm font-semibold text-gray-600">

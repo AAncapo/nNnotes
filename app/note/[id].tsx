@@ -24,8 +24,6 @@ import { ContentBlock, ContentType } from "@/types";
 import { convertAndFormatUTC, isPlatformWeb } from "@/lib/utils";
 import useTheme from "@/lib/themes";
 
-// darkNoteBg gray-950
-
 export default function NoteDetails() {
   const colorScheme = useTheme(useColorScheme());
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -64,6 +62,10 @@ export default function NoteDetails() {
   const handleOpenOptionsModal = (id: string) => {
     setOptionsId(id);
     setOptionsModalVisible(true);
+  };
+
+  const handleEditBlockProps = (id: string, name: string) => {
+    // Modal de edicion de props
   };
 
   const onToolbarOptionSelected = (type: ContentType) => {
@@ -147,8 +149,10 @@ export default function NoteDetails() {
           <ImagesContainer
             key={`image-group-${blockOrGroup[0].id}`}
             images={blockOrGroup}
-            onDelete={handleDeleteBlock}
             maxPerRow={4}
+            onUpdate={handleUpdateBlock}
+            // onEditProp={handleEditBlockProps}
+            onDelete={handleDeleteBlock}
           />
         );
       }
@@ -256,6 +260,7 @@ export default function NoteDetails() {
         visible={optionsModalVisible}
         onClose={() => setOptionsModalVisible(false)}
         onDelete={handleDeleteBlock}
+        editBlockProps={handleEditBlockProps}
       />
     </SafeAreaView>
   ) : (
