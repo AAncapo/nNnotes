@@ -11,18 +11,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AudioRecordingModal } from "@/components/AudioRecordingModal";
-import BlockOptionsModal from "@/components/BlockOptionsModal";
-import NoteHeader from "@/components/NoteHeader";
-import NoteToolbar from "@/components/NoteToolbar";
-import { AudioBlock } from "@/components/content-blocks/AudioBlock";
-import { ChecklistBlock } from "@/components/content-blocks/ChecklistBlock";
-import { TextBlock } from "@/components/content-blocks/TextBlock";
-import ImagesContainer from "@/components/ImagesContainer";
-import useNote from "@/hooks/useNote";
 import { ContentBlock, ContentType } from "@/types";
 import { convertAndFormatUTC, isPlatformWeb } from "@/lib/utils";
 import useTheme from "@/lib/themes";
+import useNote from "@/hooks/useNote";
+import NoteHeader from "@/components/NoteHeader";
+import NoteToolbar from "@/components/NoteToolbar";
+import BlockOptionsModal from "@/components/BlockOptionsModal";
+import { AudioRecordingModal } from "@/components/AudioRecordingModal";
+import { ChecklistBlock } from "@/components/content-blocks/ChecklistBlock";
+import { AudioBlock } from "@/components/content-blocks/AudioBlock";
+import { TextBlock } from "@/components/content-blocks/TextBlock";
+import ImagesContainer from "@/components/ImagesContainer";
 
 export default function NoteDetails() {
   const colorScheme = useTheme(useColorScheme());
@@ -198,7 +198,17 @@ export default function NoteDetails() {
 
   console.log(`id: ${id}`);
 
-  return id !== undefined ? (
+  if (!id) {
+    return (
+      <View className="flex-1 justify-center items-center bg-gray-950">
+        <Text className="text-center font-semibold text-2xl text-slate-50">
+          {"Selecciona una nota para continuar editando \no\nCrea una nueva"}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
     <SafeAreaView
       className={`flex-1`}
       style={{ backgroundColor: colorScheme?.secondary }}
@@ -263,11 +273,5 @@ export default function NoteDetails() {
         editBlockProps={handleEditBlockProps}
       />
     </SafeAreaView>
-  ) : (
-    <View className="flex-1 justify-center items-center bg-gray-950">
-      <Text className="text-center font-semibold text-2xl text-slate-50">
-        {"Selecciona una nota para continuar editando \no\nCrea una nueva"}
-      </Text>
-    </View>
   );
 }

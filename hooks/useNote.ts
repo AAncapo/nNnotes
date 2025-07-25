@@ -141,8 +141,8 @@ function useNote(id?: string) {
 
     if (newBlocks.length > 0) {
       newContent = [...newContent, ...newBlocks];
+      // Añade un text seguido del block si el añadido no es tipo text
       if (type !== ContentType.TEXT) {
-        // Añade un text seguido del block si el añadido no es tipo text
         newContent.push({
           id: Date.now().toString() + "new",
           type: ContentType.TEXT,
@@ -150,7 +150,7 @@ function useNote(id?: string) {
             // isExpanded: true,
             focus: false,
             text: "",
-            placeholder: "",
+            placeholder: "...",
           },
         });
       }
@@ -189,39 +189,43 @@ function useNote(id?: string) {
 
   const handleDeleteBlock = (blockId: string) => {
     const deleteIndex = content.findIndex((b) => b.id === blockId);
-    if (content[deleteIndex].type === ContentType.TEXT) {
-      // Si es un texto...
-      if (content.length <= 1) {
-        // Si es el primer block...
-        // TODO: Enfocar siguiente si es texto
+    const isLast = deleteIndex === content.length - 1;
+    const currentIsText = content[deleteIndex].type === ContentType.TEXT;
+    const prevIsText = content[deleteIndex - 1].type === ContentType.TEXT;
 
-        console.log("No puede eliminar el primer texto onBackspace");
-        return;
-      }
-
-      if (
-        deleteIndex > 0 &&
-        content[deleteIndex - 1].type === ContentType.TEXT
-      ) {
-        // TODO: Enfocar anterior primero
-        console.log(
-          "TODO: Enfocar texto anterior antes de borrar seleccionado"
-        );
-      }
+    // Si es texto y es el único o el último (y no hay un texto antes), no borrar
+    if (
+      (currentIsText && content.length === 1) ||
+      (currentIsText && isLast && !prevIsText)
+    ) {
+      return;
     }
 
-    const newContent = content.filter((block) => block.id !== blockId);
+    let newContent = [...content];
+
+    // Si actual es texto y el anterior es texto, enfocar anterior al borrar
+    if (currentIsText && prevIsText) {
+      newContent = newContent.map((b, index) => {
+        return index === deleteIndex - 1
+          ? { ...b, props: { ...b.props, focus: true } }
+          : b;
+      });
+    }
+
+    // Quitar block del contenido
+    newContent = content.filter(
+      (block) => block.id !== blockId
+    ) as ContentBlock[];
+
+    // Si queda vacío, agrega texto default
     if (newContent.length === 0) {
-      // Si block borrado es el primero y la nota va a quedar vacia add texto default
-      // Esto no debería suceder ya que siempre habrá una nota de texto al final
-      addNewContentBlock(ContentType.TEXT, [
+      newContent = [
         {
-          text: "",
-          placeholder: textPlaceholder,
-          // isExpanded: true,
-          focus: false,
+          id: getRandomID(),
+          type: ContentType.TEXT,
+          props: { text: "", placeholder: textPlaceholder, focus: true },
         },
-      ]);
+      ];
     }
 
     setContent(newContent);
