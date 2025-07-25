@@ -14,7 +14,6 @@ export interface Note {
   isPinned?: boolean;
   createdAt: string;
   updatedAt: string;
-  isDeleted?: boolean;
 }
 
 export interface ContentBlock {
@@ -40,3 +39,9 @@ export type ChecklistItem = {
   text: string;
   checked: boolean;
 };
+
+export interface NotesFolder {
+  id: string;
+  name: string;
+  notes: string[];
+}

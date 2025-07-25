@@ -1,4 +1,5 @@
 import useTheme from "@/lib/themes";
+import { isPlatformWeb } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNotesStore } from "@/store/useNotesStore";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
@@ -8,26 +9,53 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Touchable,
   TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 function Settings() {
   const theme = useTheme(useColorScheme());
   const { user, signOut } = useAuthStore();
-  const { syncNotes, loading } = useNotesStore();
+  const { folders, setSelectedFolder, getNoteByFolder, syncNotes, loading } =
+    useNotesStore();
+
+  const handleSelectFolder = (folderId: string | null) => {
+    setSelectedFolder(folderId);
+    if (isPlatformWeb) router.setParams({ view: "notes" });
+    else router.back();
+  };
+
+  const handleGoBack = () => {
+    if (isPlatformWeb) router.setParams({ view: "notes" });
+    else router.replace(`/notes`);
+  };
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={[styles.container, { backgroundColor: theme?.background }]}
+    <View
+      className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
+      style={{ backgroundColor: theme?.background }}
     >
-      <ScrollView className="flex-1">
-        <View className="flex-1">
+      <View className="flex-1 p-4">
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-4">
+          <TouchableOpacity className="flex-1" onPress={handleGoBack}>
+            <Text style={{ color: theme?.text }}>Back</Text>
+          </TouchableOpacity>
+          <Text
+            className="flex-1 text-center text-2xl font-semibold"
+            style={{ color: theme?.text }}
+          >
+            Settings
+          </Text>
+          <TouchableOpacity className="flex-1 items-end">
+            <Text>EN</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView>
           {/* Account Section */}
-          <View style={[styles.section, { backgroundColor: theme?.secondary }]}>
+          <View style={[styles.section]}>
             <Text style={[styles.sectionTitle, { color: theme?.text }]}>
               Cuenta
             </Text>
@@ -48,7 +76,7 @@ function Settings() {
                     </View>
                     <View>
                       <Text style={[styles.name, { color: theme?.text }]}>
-                        {user.email}
+                        {user.user_metadata.username || user.email}
                       </Text>
                       <Text style={[styles.status, { color: theme?.text }]}>
                         {!user ? "Guest User" : "Signed In"}
@@ -95,7 +123,7 @@ function Settings() {
                     <View className="items-center justify-center gap-2 py-2">
                       <ActivityIndicator color={"gray"} />
                       <Text style={{ color: theme?.text }}>
-                        SinNncronizando...
+                        Sincronizando...
                       </Text>
                     </View>
                   )}
@@ -118,7 +146,36 @@ function Settings() {
               </View>
             )}
           </View>
-
+          {/* Folders */}
+          <View>
+            <Text
+              className="text-xl font-semibold"
+              style={{ color: theme?.text }}
+            >
+              Folders
+            </Text>
+            <TouchableOpacity
+              className="p-2 flex-row justify-between"
+              onPress={() => handleSelectFolder(null)}
+            >
+              <Text style={{ color: theme?.text }}>All Notes</Text>
+              <Text className="font-semibold" style={{ color: theme?.text }}>
+                {getNoteByFolder(null).length}
+              </Text>
+            </TouchableOpacity>
+            {folders.map((f) => (
+              <TouchableOpacity
+                key={f.id}
+                className="p-2 flex-row justify-between"
+                onPress={() => handleSelectFolder(f.id)}
+              >
+                <Text style={{ color: theme?.text }}>{f.name}</Text>
+                <Text className="font-semibold" style={{ color: theme?.text }}>
+                  {f.notes.length}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
           {/* Theme Selector Section */}
           {/* <View style={[styles.section, { backgroundColor: colorScheme?.secondary }]}>
             <Text style={[styles.sectionTitle, { color: colorScheme?.text }]}>
@@ -162,19 +219,15 @@ function Settings() {
               ))}
             </View>
           </View> */}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </View>
+    </View>
   );
 }
 
 export default Settings;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   section: {
     borderRadius: 12,
     padding: 16,
@@ -246,24 +299,5 @@ const styles = StyleSheet.create({
   authButtonText: {
     color: "white",
     fontWeight: "bold",
-  },
-  themeOptions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  themeOption: {
-    flex: 1,
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  themeOptionText: {
-    fontSize: 14,
-    fontWeight: "500",
   },
 });

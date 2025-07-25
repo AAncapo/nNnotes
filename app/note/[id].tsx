@@ -240,7 +240,7 @@ export default function NoteDetails() {
           ListFooterComponent={() =>
             createdAt && (
               <Text
-                className="p-4 pt-20 text-center"
+                className="p-4 pt-20 text-center opacity-50"
                 style={{ color: colorScheme!.text }}
               >
                 Creado {convertAndFormatUTC(createdAt)}

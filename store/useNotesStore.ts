@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-import { Note } from "@/types";
+import { Note, NotesFolder } from "@/types";
 import { getData, storeData } from "@/lib/async-storage";
 import { supabase } from "@/lib/supabase";
 import { Alert } from "react-native";
@@ -11,24 +11,52 @@ import { router } from "expo-router";
 
 interface NotesState {
   notes: Note[];
+  folders: NotesFolder[];
+  selectedFolder: string | null;
   loading: boolean;
   setNotes: (notes: Note[]) => Promise<void>;
   addNote: (note: Omit<Note, "id" | "createdAt" | "updatedAt">) => void;
   updateNote: (id: string, note: Partial<Note>, setUpdatedAt?: boolean) => void;
+  moveToTrash: (id: string) => Promise<void>;
   deleteNote: (id: string) => void;
   getNote: (id: string) => Note | undefined;
+  getNoteByFolder: (folderId: string | null) => Note[];
+  setSelectedFolder: (selectedFolder: string | null) => void;
   getAllTags: () => string[];
   initializeNotes: () => Promise<void>;
   syncNotes: () => Promise<void>;
 }
 
+const DEFAULT_FOLDERS = [
+  { id: "deleted", name: "Trash", notes: [] },
+] as NotesFolder[];
+
 export const useNotesStore = create<NotesState>()((set, get) => ({
   notes: [],
+  folders: [...DEFAULT_FOLDERS],
+  selectedFolder: null,
   loading: false,
+
   setNotes: async (notes) => {
+    // let folders = [...get().folders];
+
+    // const notes = newNotes.map((n) => {
+    //   // Add to deleted folder if necessary
+    //   if (
+    //     n.isDeleted &&
+    //     !folders
+    //       .find((f) => f.id === "deleted")!
+    //       .notes.some((dnId) => dnId === n.id)
+    //   ) {
+    //     !folders.find((f) => f.id === "deleted")!.notes.push(n.id);
+    //   }
+    //   return n;
+    // });
+
     set({ notes });
-    await storeData("notes", notes);
+    await storeData("notes", { ...get(), notes });
   },
+
   addNote: (note) => {
     // console.log("add note");
     const newNote: Note = {
@@ -36,10 +64,10 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      isDeleted: false,
     };
     get().setNotes([...get().notes, newNote]);
   },
+
   updateNote: (id, note, setUpdatedAt = true) => {
     // console.log("update note");
     get().setNotes([
@@ -54,10 +82,53 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
       ),
     ]);
   },
+
+  moveToTrash: async (id) => {
+    // Remueve la nota de cualquier folder dnde se encuentre
+    // y la añade al deleted folder
+    const folders = get().folders.map((f) => {
+      if (f.id !== "deleted") f.notes.filter((n) => n !== id);
+      else {
+        if (!f.notes.includes(id)) {
+          f.notes.push(id);
+        }
+      }
+
+      return f;
+    });
+
+    set({ folders });
+    await storeData("notes", { ...get(), folders });
+  },
+
   deleteNote: (id) => {
     get().setNotes(get().notes.filter((n) => n.id !== id));
   },
+
+  setSelectedFolder: (selectedFolder) => {
+    set({ selectedFolder });
+  },
+
   getNote: (id) => get().notes.find((n) => n.id === id),
+
+  getNoteByFolder: (folderId) => {
+    const folder = folderId
+      ? get().folders.find((f) => f.id === folderId)
+      : null;
+
+    // by default returns all not deleted notes
+    if (!folder) {
+      const deletedFolder = get().folders.find((f) => f.id === "deleted");
+      return get().notes.filter(
+        (n) => !deletedFolder!.notes.some((dn) => dn === n.id)
+      );
+    }
+
+    return folder.notes
+      .map((id) => get().notes.find((n) => n.id === id))
+      .filter((n) => n !== undefined);
+  },
+
   getAllTags: () => {
     let tags: string[] = [];
     const notes = get().notes;
@@ -69,13 +140,17 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     }
     return tags;
   },
-  initializeNotes: async () => {
-    set({ loading: true });
 
+  initializeNotes: async () => {
     try {
-      const notes = await getData("notes");
-      if (notes) {
-        set({ notes });
+      set({ loading: true });
+      const data = await getData("notes");
+      if (data) {
+        set({
+          ...get(),
+          loading: false,
+          ...data.notes,
+        });
       }
     } catch (error) {
       console.log(error);
@@ -83,12 +158,12 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
       set({ loading: false });
     }
   },
+
   syncNotes: async () => {
     try {
       set({ loading: true });
 
       const user = await useAuthStore.getState().getUser();
-      // const user = useAuthStore.getState().user;
       if (!user) {
         Alert.alert(
           "Usuario no autenticado",
@@ -209,7 +284,6 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
               id: note.id,
               user_id: user?.id,
               email: user.email,
-              is_deleted: note.isDeleted,
               updated_at: note.updatedAt,
               created_at: note.createdAt,
               note,
