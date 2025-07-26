@@ -9,7 +9,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  Touchable,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -29,13 +28,15 @@ function Settings() {
 
   const handleGoBack = () => {
     if (isPlatformWeb) router.setParams({ view: "notes" });
-    else router.replace(`/notes`);
+    else router.back();
   };
 
   return (
     <View
       className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
-      style={{ backgroundColor: theme?.background }}
+      style={{
+        backgroundColor: theme?.background,
+      }}
     >
       <View className="flex-1 p-4">
         {/* Header */}
@@ -137,11 +138,16 @@ function Settings() {
                 <TouchableOpacity
                   style={[
                     styles.authButton,
-                    { backgroundColor: theme?.iconButton },
+                    { backgroundColor: theme?.button },
                   ]}
                   onPress={() => router.push("/signin")}
                 >
-                  <Text style={styles.authButtonText}>Sign In / Register</Text>
+                  <Text
+                    className="font-bold"
+                    style={{ color: theme?.buttonText }}
+                  >
+                    Sign In / Register
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -295,9 +301,5 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
-  },
-  authButtonText: {
-    color: "white",
-    fontWeight: "bold",
   },
 });

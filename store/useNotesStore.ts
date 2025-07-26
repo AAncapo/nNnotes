@@ -149,7 +149,8 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
         set({
           ...get(),
           loading: false,
-          ...data.notes,
+          notes: [...data.notes],
+          folders: [...data.folders],
         });
       }
     } catch (error) {

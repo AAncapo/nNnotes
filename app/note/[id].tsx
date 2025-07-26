@@ -196,7 +196,7 @@ export default function NoteDetails() {
     [groupedContent, audioPlaying]
   );
 
-  console.log(`id: ${id}`);
+  // console.log(`id: ${id}`);
 
   if (!id) {
     return (
@@ -218,11 +218,10 @@ export default function NoteDetails() {
         title={title}
         updateTitle={handleUpdateTitle}
         submitTitle={handleTitleSubmit}
-        onMain={() => handleSave(true)}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className={`flex-1 relative ${isPlatformWeb ? "flex-row" : ""}`}
+        className={`flex-1 ${isPlatformWeb ? "flex-row" : ""}`}
       >
         {/* Content */}
         <FlatList
@@ -236,11 +235,11 @@ export default function NoteDetails() {
           }}
           alwaysBounceVertical
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="px-4 flex-grow"
-          ListFooterComponent={() =>
+          contentContainerClassName="px-4"
+          ListHeaderComponent={() =>
             createdAt && (
               <Text
-                className="p-4 pt-20 text-center opacity-50"
+                className="p-2 text-center opacity-50"
                 style={{ color: colorScheme!.text }}
               >
                 Creado {convertAndFormatUTC(createdAt)}
@@ -248,11 +247,14 @@ export default function NoteDetails() {
             )
           }
         />
-        {/* Toolbar */}
-        <View className="items-center">
-          <NoteToolbar onOptionSelected={onToolbarOptionSelected} />
-        </View>
       </KeyboardAvoidingView>
+      {/* Toolbar */}
+      <View className="items-center">
+        <NoteToolbar
+          onAddContentBlock={onToolbarOptionSelected}
+          onSave={() => handleSave(true)}
+        />
+      </View>
 
       {/* Modals */}
       <AudioRecordingModal

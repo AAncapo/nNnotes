@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   TouchableOpacity,
   useColorScheme,
@@ -10,7 +10,6 @@ import {
   RefreshControl,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useNotesStore } from "@/store/useNotesStore";
 import { Note } from "@/types";
@@ -30,7 +29,6 @@ export default function Notes() {
   const { view } = useLocalSearchParams<{
     view?: VIEW;
   }>();
-  const marginTop = useSafeAreaInsets().top;
   const {
     notes,
     updateNote,
@@ -42,9 +40,9 @@ export default function Notes() {
     loading,
   } = useNotesStore();
 
-  const onRefresh = useCallback(async () => {
-    await syncNotes();
-  }, []);
+  const folderName = !selectedFolder
+    ? "Notas"
+    : folders.find((f) => f.id === selectedFolder)?.name || "Notas.";
 
   const filteredNotes = useMemo(() => {
     return getNoteByFolder(selectedFolder);
@@ -77,6 +75,10 @@ export default function Notes() {
     [notes]
   );
 
+  const onRefresh = useCallback(async () => {
+    await syncNotes();
+  }, []);
+
   const handleCreateNote = () => {
     if (isPlatformWeb) {
       router.setParams({ id: "new" });
@@ -95,21 +97,17 @@ export default function Notes() {
     }
   };
 
-  const folderName = !selectedFolder
-    ? "Notas"
-    : folders.find((f) => f.id === selectedFolder)?.name || "Notas.";
-
   console.log(`showing ${sortedNotes.length} from ${notes.length} notes...`);
-  // https://expo.dev/accounts/aaancapo/projects/nNnotes/builds/3973101e-f4aa-494a-8fba-88e49fa2c0f8
+
   return (
-    <GestureHandlerRootView className={`flex-1 flex-row`}>
+    <GestureHandlerRootView className={`flex-1 ${isPlatformWeb && "flex-row"}`}>
       {/* Notes list */}
       {!view || view === VIEW.NOTES ? (
         <View
           className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
           style={{ backgroundColor: colorScheme?.background }}
         >
-          <View className="p-2 pb-4 pt-4 gap-4" style={{ marginTop }}>
+          <View className="p-2 pb-4 pt-4 gap-4">
             <View className="flex-row items-center justify-between p-2">
               <Text
                 className={`text-5xl font-bold`}
@@ -171,7 +169,7 @@ export default function Notes() {
               keyExtractor={(item) => item.id}
               alwaysBounceVertical
               keyboardShouldPersistTaps="handled"
-              contentContainerClassName={`flex-grow px-4`}
+              contentContainerClassName={`px-4`}
               refreshControl={
                 <RefreshControl refreshing={loading} onRefresh={onRefresh} />
               }

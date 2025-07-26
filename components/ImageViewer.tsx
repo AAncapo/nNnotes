@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   useColorScheme,
   TextInput,
+  KeyboardAvoidingView,
 } from "react-native";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 
@@ -85,9 +86,11 @@ export default function ImageViewer({
       onRequestClose={onClose}
       statusBarTranslucent={true}
     >
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)" }}
+      >
         <View
-          className="flex-row w-full items-center p-4 px-8"
+          className="flex-row w-full items-center p-4 px-4"
           style={{ backgroundColor: "rgba(0,0,0,0.9)" }}
         >
           <View className="flex-1 flex-row items-start space-x-4">
@@ -95,18 +98,22 @@ export default function ImageViewer({
               <MaterialIcons
                 name="delete"
                 size={24}
-                color={colorScheme?.icons}
+                color={colorScheme?.iconButton}
               />
             </TouchableOpacity>
           </View>
           <View className="flex-1 items-center">
-            <Text style={[styles.counterText, { color: colorScheme?.text }]}>
+            <Text className="text-white font-bold text-md">
               {currentIndex + 1} / {images.length}
             </Text>
           </View>
           <View className="flex-1">
             <TouchableOpacity className="self-end p-4" onPress={onClose}>
-              <AntDesign name="close" size={24} color={colorScheme?.text} />
+              <AntDesign
+                name="close"
+                size={24}
+                color={colorScheme?.iconButton}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -149,20 +156,20 @@ export default function ImageViewer({
           <TouchableOpacity
             onPress={goPrev}
             disabled={images.length === 1}
-            style={styles.navButton}
+            className="p-10"
           >
-            <AntDesign name="left" size={28} color={colorScheme?.text} />
+            <AntDesign name="left" size={28} color={colorScheme?.iconButton} />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={goNext}
             disabled={images.length === 1}
-            style={styles.navButton}
+            className="p-10"
           >
-            <AntDesign name="right" size={28} color={colorScheme?.text} />
+            <AntDesign name="right" size={28} color={colorScheme?.iconButton} />
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -175,6 +182,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   counterText: {
+    color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -183,9 +191,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    paddingHorizontal: 20,
-  },
-  navButton: {
-    padding: 20,
+    paddingHorizontal: 4,
   },
 });

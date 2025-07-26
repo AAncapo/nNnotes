@@ -4,9 +4,11 @@ import "../global.css";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Layout() {
   const colorScheme = useTheme(useColorScheme());
+  const { top, bottom } = useSafeAreaInsets();
 
   return (
     <>
@@ -18,7 +20,11 @@ export default function Layout() {
         screenOptions={{
           animation: "fade_from_bottom", // Animación más ligera
           animationDuration: 150, // Reducir duración de la animación
-          contentStyle: { backgroundColor: "#fff" },
+          contentStyle: {
+            backgroundColor: "#fff",
+            marginTop: top,
+            marginBottom: bottom,
+          },
           headerShown: false,
           navigationBarColor: colorScheme?.background,
         }}
@@ -26,42 +32,30 @@ export default function Layout() {
         <Stack.Screen
           name="note/[id]"
           options={{
-            freezeOnBlur: true, // Mejorar rendimiento
+            freezeOnBlur: true,
             navigationBarColor: colorScheme?.secondary,
           }}
         />
         <Stack.Screen
           name="notes"
           options={{
-            freezeOnBlur: true, // Mejorar rendimiento
+            freezeOnBlur: true,
           }}
         />
         <Stack.Screen
           name="settings"
           options={{
-            freezeOnBlur: true, // Mejorar rendimiento
+            freezeOnBlur: true,
           }}
         />
         <Stack.Screen
           name="(auth)"
           options={{
-            freezeOnBlur: true, // Mejorar rendimiento
+            freezeOnBlur: true,
             navigationBarColor: colorScheme?.secondary,
           }}
         />
       </Stack>
-      {/* <Stack
-        screenOptions={{
-          headerShown: false,
-          headerStyle: {
-            backgroundColor: colorScheme?.secondary,
-          },
-          headerTintColor: colorScheme?.secondary,
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-        }}
-      /> */}
     </>
   );
 }

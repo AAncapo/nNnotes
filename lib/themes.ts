@@ -7,8 +7,8 @@ export default function useTheme(colorScheme: ColorSchemeName) {
 
 const Colors = (colorScheme: ColorSchemeName) => {
   return {
-    background: colorScheme === "dark" ? "#111827" : "#f8fafc",
-    secondary: colorScheme === "dark" ? "#030712" : "white",
+    background: colorScheme === "dark" ? "#111827" : "white",
+    secondary: colorScheme === "dark" ? "#030712" : "#f8fafc",
     button: colorScheme === "dark" ? "white" : "black",
     buttonText: colorScheme === "dark" ? "black" : "white",
     iconButton: colorScheme === "dark" ? "black" : "white",
