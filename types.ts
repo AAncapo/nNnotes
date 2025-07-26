@@ -38,6 +38,7 @@ export type ChecklistItem = {
   id: string;
   text: string;
   checked: boolean;
+  focus: boolean;
 };
 
 export interface NotesFolder {

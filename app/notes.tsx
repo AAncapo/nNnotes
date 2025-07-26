@@ -40,9 +40,13 @@ export default function Notes() {
     loading,
   } = useNotesStore();
 
-  const folderName = !selectedFolder
-    ? "Notas"
-    : folders.find((f) => f.id === selectedFolder)?.name || "Notas.";
+  const folderName = useMemo(
+    () =>
+      !selectedFolder
+        ? "Notas"
+        : folders.find((f) => f.id === selectedFolder)?.name || "Notas.",
+    [selectedFolder]
+  );
 
   const filteredNotes = useMemo(() => {
     return getNoteByFolder(selectedFolder);
@@ -75,9 +79,9 @@ export default function Notes() {
     [notes]
   );
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     await syncNotes();
-  }, []);
+  };
 
   const handleCreateNote = () => {
     if (isPlatformWeb) {
@@ -223,11 +227,7 @@ export default function Notes() {
           className={`absolute bottom-16 h-20 w-20 items-center justify-center self-center rounded-full`}
           onPress={handleCreateNote}
         >
-          <Ionicons
-            name="add"
-            size={28}
-            color={useColorScheme() === "dark" ? "black" : "white"}
-          />
+          <Ionicons name="add" size={28} color={colorScheme?.iconButton} />
         </TouchableOpacity>
       )}
     </GestureHandlerRootView>

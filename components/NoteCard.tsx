@@ -22,6 +22,8 @@ interface NoteCardProps {
 
 function NoteCard({ note, onDelete, onLongPress }: NoteCardProps) {
   const colorScheme = useTheme(useColorScheme());
+  const { id, title, isPinned, updatedAt } = note;
+  const parsedUpdatedAt = convertAndFormatUTC(updatedAt);
 
   const renderRightActions = (id: string) => {
     return (
@@ -45,60 +47,72 @@ function NoteCard({ note, onDelete, onLongPress }: NoteCardProps) {
       case ContentType.IMAGE:
         return "Imagen";
       case ContentType.CHECKLIST:
-        return cblock.props.title !== ""
-          ? cblock.props.title
-          : cblock.props.items!.length > 0 && cblock.props.items![0].text !== ""
-            ? cblock.props.items![0].text
-            : "Checklist";
+        const checkedItems = cblock.props.items?.filter(
+          (i) => i.checked
+        ).length;
+        return `Checklist (${checkedItems + "/" + cblock.props.items?.length})`;
+      // return cblock.props.title !== ""
+      //   ? cblock.props.title
+      //   : cblock.props.items!.length > 0 && cblock.props.items![0].text !== ""
+      //     ? cblock.props.items![0].text
+      //     : "Checklist";
       default:
         return "<unknown>";
     }
     // <MaterialIcons name="music-note" size={24} color="black" />;
   }, [note]);
 
-  const updatedAt = convertAndFormatUTC(note.updatedAt);
-
   return (
-    <Swipeable renderRightActions={() => renderRightActions(note.id)}>
+    <Swipeable renderRightActions={() => renderRightActions(id)}>
       <TouchableOpacity
-        className={`relative py-2 ${useColorScheme() === "dark" ? "border-gray-800" : "border-gray-200"}`}
+        className={`py-2 ${useColorScheme() === "dark" ? "border-gray-800" : "border-gray-200"}`}
         onPress={() =>
           isPlatformWeb
-            ? router.setParams({ id: note.id })
-            : router.push({ pathname: "/note/[id]", params: { id: note.id } })
+            ? router.setParams({ id })
+            : router.push({ pathname: "/note/[id]", params: { id } })
         }
         onLongPress={onLongPress}
       >
-        {/* Title */}
+        <View className="flex-row justify-between">
+          {/* Title */}
+          <Text
+            className={`font-semibold text-lg ${useColorScheme() === "dark" ? "text-white" : "text-gray-800"} flex text-ellipsis`}
+            numberOfLines={1}
+          >
+            {title === "" ? renderSubtitle : title}
+          </Text>
+          {/* Pin */}
+          {isPinned && (
+            <View className="opacity-30">
+              <MaterialCommunityIcons
+                name="pin"
+                size={18}
+                color={colorScheme?.icons}
+              />
+            </View>
+          )}
+        </View>
+        {/* Subtitle */}
         <Text
-          className={`font-semibold text-md ${useColorScheme() === "dark" ? "text-white" : "text-gray-800"} flex text-ellipsis`}
-          numberOfLines={1}
-        >
-          {note.title === "" ? renderSubtitle : note.title}
-        </Text>
-        <Text
-          className={`max-h-16 text-sm ${useColorScheme() === "dark" ? "text-gray-400" : "text-gray-500"} flex text-ellipsis line-clamp-2 overflow-hidden`}
+          className={`max-h-16 text-sm ${useColorScheme() === "dark" ? "text-gray-400" : "text-gray-500"} flex text-ellipsis line-clamp-${isPinned ? 1 : 2} overflow-hidden`}
         >
           {renderSubtitle}
         </Text>
-        <View className="flex-row justify-between">
-          <Text
-            className={`py-1 pt-2 text-xs ${useColorScheme() === "dark" ? "text-gray-500" : "text-gray-400"} line-clamp-1 overflow-clip`}
-          >
-            {updatedAt}
-          </Text>
-        </View>
-        {note.isPinned && (
-          <View className="absolute right-0 top-2">
-            <MaterialCommunityIcons
-              name="pin-outline"
-              size={20}
-              color={colorScheme?.icons}
-            />
+        {/* UpdatedAt */}
+        {!isPinned && (
+          <View className="flex-row justify-between">
+            <Text
+              className={`py-1 pt-2 text-xs ${useColorScheme() === "dark" ? "text-gray-500" : "text-gray-400"} line-clamp-1 overflow-clip`}
+            >
+              {parsedUpdatedAt}
+            </Text>
           </View>
         )}
       </TouchableOpacity>
-      <View className="h-[1px] w-full self-center rounded-full bg-gray-200 opacity-10" />
+      <View
+        className={`h-[1px] w-full self-center rounded-full opacity-10`}
+        style={{ backgroundColor: colorScheme?.separator }}
+      />
     </Swipeable>
   );
 }

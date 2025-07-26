@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity, useColorScheme, View } from "react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 import { PropsWithChildren, ReactNode } from "react";
 
 import { ContentType } from "@/types";
@@ -15,11 +20,13 @@ function NoteToolbar({ onAddContentBlock, onSave }: ToolbarProps) {
   const colorScheme = useTheme(useColorScheme());
   return (
     <View
-      className={`${isPlatformWeb ? "flex-1" : "flex-row w-full h-14"} items-center justify-center`}
+      className={`${isPlatformWeb ? "flex-1" : "flex-row w-full h-14 px-4"} items-center justify-center`}
       style={{ backgroundColor: isPlatformWeb ? "" : colorScheme?.background }}
     >
-      <View className="px-4 justify-between items-center">
-        <View className="p-4">{/* Text options? */}</View>
+      <View className="flex-1 p-4">{/* Text options? */}</View>
+      <View
+        className={`${isPlatformWeb ? "" : "flex-row"} justify-between items-center`}
+      >
         <ToolBarButton
           type={ContentType.CHECKLIST}
           onSelected={onAddContentBlock}
@@ -33,7 +40,7 @@ function NoteToolbar({ onAddContentBlock, onSave }: ToolbarProps) {
           <Ionicons name="image" size={24} color={colorScheme?.icons} />
         </ToolBarButton>
       </View>
-      <TouchableOpacity className="p-4" onPress={onSave}>
+      <TouchableOpacity className="flex-1 p-4 items-end" onPress={onSave}>
         <Ionicons name="checkmark-sharp" size={24} color={colorScheme?.icons} />
       </TouchableOpacity>
     </View>

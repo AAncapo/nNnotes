@@ -1,13 +1,7 @@
 import { ChecklistItem } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { memo, useEffect, useRef } from "react";
-import {
-  Pressable,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { TextInput, TouchableOpacity, View } from "react-native";
 
 interface ListItemProps {
   focus: boolean;
@@ -39,8 +33,8 @@ function ListItem({
   }, [focus]);
 
   return (
-    <View className="flex-row items-center p-2">
-      <TouchableOpacity onPress={() => onItemCheck(item.id)}>
+    <View className="flex-row items-start px-2">
+      <TouchableOpacity className="pt-1.5" onPress={() => onItemCheck(item.id)}>
         <Ionicons
           name={item.checked ? "checkbox" : "square-outline"}
           size={24}
@@ -49,10 +43,13 @@ function ListItem({
       </TouchableOpacity>
       <TextInput
         ref={inputRef}
-        className={`ml-2 flex-1 ${item.checked ? "line-through" : ""}`}
-        style={{ color: colorScheme?.text }}
+        className={`ml-1 flex-1 overflow-clip my-[-3]`}
+        style={{
+          color: colorScheme?.text,
+          textDecorationLine: item.checked ? "line-through" : "none",
+          textAlignVertical: "top",
+        }}
         value={item.text}
-        // placeholder="Checklist item"
         onChangeText={(text) => onItemChangeText(item.id, text)}
         onSubmitEditing={() => addItem(index)}
         onKeyPress={(e) => {
@@ -61,14 +58,6 @@ function ListItem({
           }
         }}
       />
-      <Pressable onPress={() => removeItem(index)}>
-        <Text
-          className="text-center font-semibold text-sm"
-          style={{ color: colorScheme?.text }}
-        >
-          x
-        </Text>
-      </Pressable>
     </View>
   );
 }
