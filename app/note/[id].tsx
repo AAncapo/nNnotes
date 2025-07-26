@@ -239,13 +239,18 @@ export default function NoteDetails() {
           ListHeaderComponent={() =>
             createdAt && (
               <Text
-                className="p-2 text-center opacity-50"
+                className="text-center text-xs opacity-50"
                 style={{ color: colorScheme!.text }}
               >
                 Creado {convertAndFormatUTC(createdAt)}
               </Text>
             )
           }
+          maxToRenderPerBatch={5}
+          initialNumToRender={5}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={1000}
         />
       </KeyboardAvoidingView>
       {/* Toolbar */}

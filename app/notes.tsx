@@ -173,11 +173,15 @@ export default function Notes() {
               refreshControl={
                 <RefreshControl refreshing={loading} onRefresh={onRefresh} />
               }
+              maxToRenderPerBatch={8}
+              initialNumToRender={8}
+              windowSize={5}
+              removeClippedSubviews={true}
+              updateCellsBatchingPeriod={1000}
             />
           </View>
 
           {/* (Web) Create new note button */}
-
           {isPlatformWeb && selectedFolder !== "deleted" && (
             <View className="p-8">
               <TouchableOpacity
