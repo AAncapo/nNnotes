@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { ContentBlock } from "types";
 
@@ -18,6 +19,10 @@ export function ImageBlock({
   maxPerRow,
   onSelected,
 }: ImageBlockProps) {
+  const uri = useMemo(() => {
+    if (block.props.uri) return block.props.uri;
+  }, [block]);
+
   return (
     <View
       style={[
@@ -30,7 +35,7 @@ export function ImageBlock({
         className="w-full h-full"
       >
         <Image
-          source={{ uri: block.props.uri }}
+          source={{ uri }}
           className="w-full h-full rounded-sm"
           resizeMode="cover"
         />

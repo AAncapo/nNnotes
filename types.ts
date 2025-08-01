@@ -30,6 +30,7 @@ export interface BlockProps {
   title?: string;
   items?: ChecklistItem[];
   uri?: string;
+  filename?: string;
   duration?: number;
   createdAt?: string;
 }

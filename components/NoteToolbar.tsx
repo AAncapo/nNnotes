@@ -31,17 +31,21 @@ function NoteToolbar({ onAddContentBlock, onSave }: ToolbarProps) {
           type={ContentType.CHECKLIST}
           onSelected={onAddContentBlock}
         >
-          <Ionicons name="list" size={24} color={colorScheme?.icons} />
+          <Ionicons
+            name="checkbox-outline"
+            size={22}
+            color={colorScheme?.icons}
+          />
         </ToolBarButton>
         <ToolBarButton type={ContentType.AUDIO} onSelected={onAddContentBlock}>
-          <Ionicons name="mic" size={24} color={colorScheme?.icons} />
+          <Ionicons name="mic" size={22} color={colorScheme?.icons} />
         </ToolBarButton>
         <ToolBarButton type={ContentType.IMAGE} onSelected={onAddContentBlock}>
           <Ionicons name="image" size={24} color={colorScheme?.icons} />
         </ToolBarButton>
       </View>
       <TouchableOpacity className="flex-1 p-4 items-end" onPress={onSave}>
-        <Ionicons name="checkmark-sharp" size={24} color={colorScheme?.icons} />
+        <Ionicons name="checkmark-sharp" size={22} color={colorScheme?.icons} />
       </TouchableOpacity>
     </View>
   );

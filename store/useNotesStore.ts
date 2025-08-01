@@ -2,12 +2,17 @@
 
 import { create } from "zustand";
 
-import { Note, NotesFolder } from "@/types";
+import { ContentBlock, ContentType, Note, NotesFolder } from "@/types";
 import { getData, storeData } from "@/lib/async-storage";
 import { supabase } from "@/lib/supabase";
 import { Alert } from "react-native";
 import { useAuthStore } from "./useAuthStore";
 import { router } from "expo-router";
+import {
+  checkFileInCache,
+  saveFileToCache,
+  SUPABASE_BUCKET,
+} from "@/lib/supabase-storage";
 
 interface NotesState {
   notes: Note[];
@@ -15,8 +20,14 @@ interface NotesState {
   selectedFolder: string | null;
   loading: boolean;
   setNotes: (notes: Note[]) => Promise<void>;
-  addNote: (note: Omit<Note, "id" | "createdAt" | "updatedAt">) => void;
-  updateNote: (id: string, note: Partial<Note>, setUpdatedAt?: boolean) => void;
+  addNote: (
+    note: Omit<Note, "id" | "createdAt" | "updatedAt">
+  ) => Promise<void>;
+  updateNote: (
+    id: string,
+    note: Partial<Note>,
+    setUpdatedAt?: boolean
+  ) => Promise<void>;
   moveToTrash: (id: string) => Promise<void>;
   deleteNote: (id: string) => void;
   getNote: (id: string) => Note | undefined;
@@ -57,25 +68,34 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     await storeData("notes", { ...get(), notes });
   },
 
-  addNote: (note) => {
+  addNote: async (note) => {
     // console.log("add note");
+
+    const updatedContent = await saveNewFilesInCache(note.content);
+
     const newNote: Note = {
       ...note,
       id: Date.now().toString(),
+      content: [...updatedContent],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     get().setNotes([...get().notes, newNote]);
   },
 
-  updateNote: (id, note, setUpdatedAt = true) => {
+  updateNote: async (id, note, setUpdatedAt = true) => {
     // console.log("update note");
+    let updatedContent = [] as ContentBlock[];
+    if (note.content) {
+      updatedContent = await saveNewFilesInCache(note.content);
+    }
     get().setNotes([
       ...get().notes.map((n) =>
         n.id === id
           ? {
               ...n,
               ...note,
+              content: [...updatedContent],
               updatedAt: setUpdatedAt ? new Date().toISOString() : n.updatedAt,
             }
           : n
@@ -309,3 +329,48 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     }
   },
 }));
+
+const saveNewFilesInCache = async (
+  contents: ContentBlock[]
+): Promise<ContentBlock[]> => {
+  let updatedContents = [...contents];
+
+  for (const cblock of contents) {
+    const isFile =
+      cblock.type === ContentType.AUDIO || cblock.type === ContentType.IMAGE;
+    if (!isFile) continue;
+    if (cblock.props.filename) continue;
+    // filename is assigned at the end of this operation, as a way to easy know if the file (should) exist in cache
+
+    const bucket =
+      cblock.type === ContentType.IMAGE
+        ? SUPABASE_BUCKET.IMAGES
+        : SUPABASE_BUCKET.AUDIOS;
+
+    // Check if exists in cache
+    if (!cblock.props.uri) continue;
+    const currentName = `${cblock.props.uri?.split("/").pop()}`; // filename.fileExt
+    if (!currentName) continue; // this should never happen since every audio/img file requires a uri
+
+    const cachePath = await checkFileInCache(currentName, bucket);
+
+    if (!cachePath) {
+      // Prepare copy to cache
+      const filename = `${cblock.id}+${currentName}`;
+      const uri = await saveFileToCache(cblock.props.uri, filename, bucket);
+
+      if (uri) {
+        // Update block uri and filename props
+        updatedContents = updatedContents.map((cb) => {
+          return cb.id === cblock.id
+            ? {
+                ...cb,
+                props: { ...cb.props, uri, filename },
+              }
+            : cb;
+        });
+      }
+    }
+  }
+  return updatedContents;
+};

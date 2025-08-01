@@ -6,7 +6,7 @@ import { useNotesStore } from "@/store/useNotesStore";
 import { BlockProps, ContentBlock, ContentType } from "@/types";
 import { getRandomID, isPlatformWeb } from "@/lib/utils";
 
-const textPlaceholder = "Comienza a escribir ...";
+const textPlaceholder = "Start writing ...";
 
 function useNote(id?: string) {
   const isNewNote = !id || id === "new";
@@ -46,7 +46,7 @@ function useNote(id?: string) {
     }
   };
 
-  const handleSave = (goBack?: boolean) => {
+  const handleSave = async (goBack?: boolean) => {
     // Descartar nota vacia
     const isBlank =
       !title.length && content.length === 1 && !content[0].props.text;
@@ -58,9 +58,9 @@ function useNote(id?: string) {
 
     if (!hasChanges) return;
     if (!isNewNote) {
-      updateNote(id as string, { title, content });
+      await updateNote(id as string, { title, content });
     } else {
-      addNote({ title, content });
+      await addNote({ title, content });
     }
     goBack && handleGoBack();
   };
@@ -88,17 +88,21 @@ function useNote(id?: string) {
             id: getRandomID(),
             type,
             props: {
-              items: [{ id: getRandomID(), text: "", checked: false }],
+              items: [
+                { id: getRandomID(), text: "", checked: false, focus: false },
+              ],
             },
           },
         ];
         break;
       case ContentType.IMAGE:
-        newBlocks = props.map((p) => ({
-          id: getRandomID(),
-          type,
-          props: p,
-        }));
+        newBlocks = props.map((p) => {
+          return {
+            id: getRandomID(),
+            type,
+            props: p,
+          };
+        });
         break;
       case ContentType.AUDIO:
         console.log("saving audio...", props[0].uri);
@@ -163,7 +167,6 @@ function useNote(id?: string) {
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      // allowsEditing: true,
       quality: 0.9,
       allowsMultipleSelection: true,
     });
@@ -171,10 +174,12 @@ function useNote(id?: string) {
     if (!result.canceled) {
       addNewContentBlock(
         ContentType.IMAGE,
-        result.assets.map((asset) => ({
-          text: "Image",
-          uri: asset.uri,
-        }))
+        result.assets.map((asset) => {
+          return {
+            text: "Image",
+            uri: asset.uri,
+          };
+        })
       );
     }
   };
@@ -229,6 +234,7 @@ function useNote(id?: string) {
     }
 
     setContent(newContent);
+    if (!hasChanges) setHasChanges(true);
   };
 
   const handleUpdateTitle = (newTitle: string) => {

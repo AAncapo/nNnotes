@@ -1,4 +1,6 @@
 import { ColorSchemeName, Platform } from "react-native";
+import * as FileSystem from "expo-file-system";
+import { SUPABASE_BUCKET } from "./supabase-storage";
 
 export const isPlatformWeb = Platform.OS === "web";
 

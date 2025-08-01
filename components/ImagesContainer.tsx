@@ -1,6 +1,6 @@
 import { Modal, View } from "react-native";
 import { ImageBlock } from "./content-blocks/ImageBlock";
-import { BlockProps, ContentBlock } from "@/types";
+import { ContentBlock } from "@/types";
 import { useState } from "react";
 import ImageViewer from "./ImageViewer";
 
