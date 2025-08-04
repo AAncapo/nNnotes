@@ -1,18 +1,14 @@
 import * as FileSystem from "expo-file-system";
 import { supabase } from "./supabase";
 import { useAuthStore } from "@/store/useAuthStore";
+import { SUPABASE_BUCKET } from "@/types";
 
 // filename: userId + blockId + filename
-
-export enum SUPABASE_BUCKET {
-  IMAGES = "images",
-  AUDIOS = "audios",
-}
 
 // Takes a file saved in cache and try to upload to supabase storage
 export const uploadFile = async (filename: string, bucket: SUPABASE_BUCKET) => {
   const cachePath = getCachePath(filename, bucket);
-  const supabaseFilePath = getSupabasePath(filename, bucket);
+  const supabaseFilePath = await getSupabasePath(filename);
 
   try {
     const exists = await checkFileInCache(filename, bucket);
@@ -43,6 +39,7 @@ export const uploadFile = async (filename: string, bucket: SUPABASE_BUCKET) => {
     const decodedBase64 = bytes;
 
     // Upload
+
     const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(supabaseFilePath, decodedBase64, {
@@ -72,7 +69,7 @@ export const getFile = async (
     if (isCached) return cacheDir;
 
     // If not in cache, try to download from Supabase
-    const filePath = getSupabasePath(filename, bucket);
+    const filePath = await getSupabasePath(filename);
     const { data, error } = await supabase.storage
       .from(bucket)
       .download(filePath);
@@ -141,15 +138,16 @@ export const saveFileToCache = async (
   }
 };
 
+// Helpers
 export const getCachePath = (filename: string, bucket: SUPABASE_BUCKET) =>
   `${FileSystem.cacheDirectory}${bucket}/${filename}`;
 
-const getSupabasePath = (filename: string, bucket: SUPABASE_BUCKET) => {
-  const userId = useAuthStore.getState().user?.id;
-  if (!userId)
+export const getSupabasePath = async (filename: string) => {
+  const user = await useAuthStore.getState().getUser();
+  if (!user)
     throw new Error("Error at getSupabaseFilepath. User must be logged in");
 
-  return `${bucket}/${userId}/${filename}`;
+  return `${user.id}/${filename}`;
 };
 
 // export const removeFromCache = async (

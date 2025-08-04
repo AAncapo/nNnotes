@@ -1,6 +1,4 @@
 import { ColorSchemeName, Platform } from "react-native";
-import * as FileSystem from "expo-file-system";
-import { SUPABASE_BUCKET } from "./supabase-storage";
 
 export const isPlatformWeb = Platform.OS === "web";
 
@@ -11,6 +9,8 @@ export const getIconColor = (
 
 export const getRandomID = () =>
   `${Date.now() + Math.abs(Math.random() * 1000)}`;
+
+export const getDateISOString = () => new Date().toISOString();
 
 export function convertAndFormatUTC(utcDateTime: string, options = {}) {
   try {

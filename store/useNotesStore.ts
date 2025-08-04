@@ -2,7 +2,13 @@
 
 import { create } from "zustand";
 
-import { ContentBlock, ContentType, Note, NotesFolder } from "@/types";
+import {
+  ContentBlock,
+  ContentType,
+  Note,
+  NotesFolder,
+  SUPABASE_BUCKET,
+} from "@/types";
 import { getData, storeData } from "@/lib/async-storage";
 import { supabase } from "@/lib/supabase";
 import { Alert } from "react-native";
@@ -11,8 +17,9 @@ import { router } from "expo-router";
 import {
   checkFileInCache,
   saveFileToCache,
-  SUPABASE_BUCKET,
+  uploadFile,
 } from "@/lib/supabase-storage";
+import { getDateISOString } from "@/lib/utils";
 
 interface NotesState {
   notes: Note[];
@@ -184,6 +191,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     try {
       set({ loading: true });
 
+      console.log("checking authentication...");
       const user = await useAuthStore.getState().getUser();
       if (!user) {
         Alert.alert(
@@ -200,6 +208,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
         return;
       }
 
+      console.log("reading notes table...");
       const { data, error } = await supabase
         .from("notes")
         .select("id, updated_at");
@@ -258,6 +267,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
         }
 
         // Execute sync operations
+        // Fetching...
         if (notesToFetch.length > 0) {
           console.log(
             `fetching ${fetchNew} new notes and ${fetchUpdated} updated notes...`
@@ -295,7 +305,54 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
           ]);
         }
 
+        // Upserting...
         if (notesToUpsert.length > 0) {
+          console.log("upserting...");
+          // Update storage buckets
+          for (const note of notesToUpsert) {
+            const files = note.content.filter(
+              (c) =>
+                c.type === ContentType.IMAGE || c.type === ContentType.AUDIO
+            );
+
+            for (const f of files) {
+              if (!f.props.filename) continue;
+              const bucket =
+                f.type === ContentType.IMAGE
+                  ? SUPABASE_BUCKET.IMAGES
+                  : SUPABASE_BUCKET.AUDIOS;
+
+              if (f.props.uploadedAt) {
+                // skip image if was already uploaded
+                continue;
+              } else {
+                console.log(`Uploading ${bucket} file...`);
+                await uploadFile(f.props.filename, bucket);
+                // update note
+                const updatedNote: Note = {
+                  ...note,
+                  content: [
+                    ...note.content.map((c) => {
+                      return c.id === f.id
+                        ? {
+                            ...f,
+                            props: {
+                              ...f.props,
+                              uploadedAt: getDateISOString(),
+                            },
+                          }
+                        : c;
+                    }),
+                  ],
+                };
+                // update array
+                notesToUpsert = notesToUpsert.map((n) => {
+                  return n.id === note.id ? { ...updatedNote } : n;
+                });
+              }
+            }
+          }
+
           console.log(
             `upserting ${upsertNew} new notes and ${upsertUpdated} updated...`
           );

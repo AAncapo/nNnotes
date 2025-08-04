@@ -115,7 +115,12 @@ function Settings() {
                       onPress={signOut}
                     >
                       <AntDesign name="logout" size={20} color="white" />
-                      <Text style={[styles.buttonText, { color: theme?.text }]}>
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          { color: theme?.buttonText },
+                        ]}
+                      >
                         Sign Out
                       </Text>
                     </TouchableOpacity>

@@ -1,5 +1,12 @@
-import { useMemo } from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Text } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import { ContentBlock } from "types";
 
 interface ImageBlockProps {
@@ -19,6 +26,8 @@ export function ImageBlock({
   maxPerRow,
   onSelected,
 }: ImageBlockProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const uri = useMemo(() => {
     if (block.props.uri) return block.props.uri;
   }, [block]);
@@ -30,21 +39,27 @@ export function ImageBlock({
         { width: maxPerRow === 3 ? "33%" : "25%" },
       ]}
     >
-      <TouchableOpacity
-        onPress={() => onSelected(index)}
-        className="w-full h-full"
-      >
-        <Image
-          source={{ uri }}
-          className="w-full h-full rounded-sm"
-          resizeMode="cover"
-        />
-        {isOverflow && (
-          <View style={styles.overflowOverlay}>
-            <Text style={styles.overflowText}>+ {wrappedNum?.toString()}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      {!isLoading ? (
+        <TouchableOpacity
+          onPress={() => onSelected(index)}
+          className="w-full h-full"
+        >
+          <Image
+            source={{ uri }}
+            className="w-full h-full rounded-sm"
+            resizeMode="cover"
+          />
+          {isOverflow && (
+            <View style={styles.overflowOverlay}>
+              <Text style={styles.overflowText}>
+                + {wrappedNum?.toString()}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ) : (
+        <ActivityIndicator color={"gray"} />
+      )}
     </View>
   );
 }
@@ -54,6 +69,8 @@ const styles = StyleSheet.create({
     // width: "33%", // Para 3 imágenes por fila (usar 25% para 4)
     aspectRatio: 1,
     padding: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   overflowOverlay: {
     ...StyleSheet.absoluteFillObject,

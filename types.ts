@@ -1,4 +1,8 @@
-/* eslint-disable prettier/prettier */
+export enum SUPABASE_BUCKET {
+  IMAGES = "images",
+  AUDIOS = "audios",
+}
+
 export enum ContentType {
   TEXT = "text",
   CHECKLIST = "checklist",
@@ -20,6 +24,7 @@ export interface ContentBlock {
   id: string;
   type: ContentType;
   props: BlockProps;
+  updatedAt?: string;
 }
 
 export interface BlockProps {
@@ -32,6 +37,7 @@ export interface BlockProps {
   uri?: string;
   filename?: string;
   duration?: number;
+  uploadedAt?: string;
   createdAt?: string;
 }
 
