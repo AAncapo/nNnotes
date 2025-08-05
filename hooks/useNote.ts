@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { useNotesStore } from "@/store/useNotesStore";
 import { BlockProps, ContentBlock, ContentType } from "@/types";
-import { getRandomID, isPlatformWeb } from "@/lib/utils";
+import { getDateISOString, getRandomID, isPlatformWeb } from "@/lib/utils";
 
 const textPlaceholder = "Start writing ...";
 
@@ -114,7 +114,7 @@ function useNote(id?: string) {
               title: props[0].title,
               uri: props[0].uri,
               duration: props[0].duration,
-              createdAt: new Date().toISOString(),
+              createdAt: getDateISOString(),
             },
           },
         ];

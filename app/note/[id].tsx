@@ -179,6 +179,7 @@ export default function NoteDetails() {
             />
           );
         case ContentType.AUDIO:
+          console.log("audio. " + blockOrGroup.props.uploadedAt);
           return (
             <AudioBlock
               key={blockOrGroup.id}

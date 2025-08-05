@@ -48,6 +48,13 @@ export function AudioRecordingModal({
     }
   };
 
+  const handleCancel = async () => {
+    if (isRecording) {
+      await stopRecording();
+    }
+    onClose();
+  };
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -112,7 +119,7 @@ export function AudioRecordingModal({
           </View>
 
           <View className="flex-row justify-between">
-            <TouchableOpacity className="p-3" onPress={onClose}>
+            <TouchableOpacity className="p-3" onPress={handleCancel}>
               <Text
                 className={`text-lg font-bold`}
                 style={{ color: colorScheme?.text }}

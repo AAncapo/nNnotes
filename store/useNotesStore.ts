@@ -1,6 +1,6 @@
-/* eslint-disable prettier/prettier */
-
 import { create } from "zustand";
+import { Alert } from "react-native";
+import { router } from "expo-router";
 
 import {
   ContentBlock,
@@ -9,16 +9,14 @@ import {
   NotesFolder,
   SUPABASE_BUCKET,
 } from "@/types";
-import { getData, storeData } from "@/lib/async-storage";
-import { supabase } from "@/lib/supabase";
-import { Alert } from "react-native";
 import { useAuthStore } from "./useAuthStore";
-import { router } from "expo-router";
 import {
   checkFileInCache,
   saveFileToCache,
   uploadFile,
 } from "@/lib/supabase-storage";
+import { supabase } from "@/lib/supabase";
+import { getData, storeData } from "@/lib/async-storage";
 import { getDateISOString } from "@/lib/utils";
 
 interface NotesState {
@@ -76,8 +74,6 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
   },
 
   addNote: async (note) => {
-    // console.log("add note");
-
     const updatedContent = await saveNewFilesInCache(note.content);
 
     const newNote: Note = {
@@ -91,7 +87,6 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
   },
 
   updateNote: async (id, note, setUpdatedAt = true) => {
-    // console.log("update note");
     let updatedContent = [] as ContentBlock[];
     if (note.content) {
       updatedContent = await saveNewFilesInCache(note.content);
@@ -132,9 +127,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     get().setNotes(get().notes.filter((n) => n.id !== id));
   },
 
-  setSelectedFolder: (selectedFolder) => {
-    set({ selectedFolder });
-  },
+  setSelectedFolder: (selectedFolder) => set({ selectedFolder }),
 
   getNote: (id) => get().notes.find((n) => n.id === id),
 
@@ -308,6 +301,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
         // Upserting...
         if (notesToUpsert.length > 0) {
           console.log("upserting...");
+          let updatedNotes = [] as Note[];
           // Update storage buckets
           for (const note of notesToUpsert) {
             const files = note.content.filter(
@@ -316,20 +310,19 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
             );
 
             for (const f of files) {
-              if (!f.props.filename) continue;
               const bucket =
                 f.type === ContentType.IMAGE
                   ? SUPABASE_BUCKET.IMAGES
                   : SUPABASE_BUCKET.AUDIOS;
 
-              if (f.props.uploadedAt) {
-                // skip image if was already uploaded
-                continue;
-              } else {
+              if (!f.props.filename) continue;
+
+              // skip image if was already uploaded
+              if (!f.props.uploadedAt) {
                 console.log(`Uploading ${bucket} file...`);
                 await uploadFile(f.props.filename, bucket);
-                // update note
-                const updatedNote: Note = {
+                // push to updatedNotes
+                updatedNotes.push({
                   ...note,
                   content: [
                     ...note.content.map((c) => {
@@ -344,14 +337,24 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
                         : c;
                     }),
                   ],
-                };
-                // update array
-                notesToUpsert = notesToUpsert.map((n) => {
-                  return n.id === note.id ? { ...updatedNote } : n;
                 });
               }
             }
           }
+
+          // update local state uploadedAt value
+          await get().setNotes([
+            ...get().notes.map((n) => {
+              const updatedNote = updatedNotes.find((un) => un.id === n.id);
+              return !updatedNote ? n : updatedNote;
+            }),
+          ]);
+
+          // update array to save in server with uploadedAt value
+          notesToUpsert = notesToUpsert.map((n) => {
+            const updatedNote = updatedNotes.find((un) => un.id === n.id);
+            return !updatedNote ? n : updatedNote;
+          });
 
           console.log(
             `upserting ${upsertNew} new notes and ${upsertUpdated} updated...`
@@ -406,8 +409,7 @@ const saveNewFilesInCache = async (
 
     // Check if exists in cache
     if (!cblock.props.uri) continue;
-    const currentName = `${cblock.props.uri?.split("/").pop()}`; // filename.fileExt
-    if (!currentName) continue; // this should never happen since every audio/img file requires a uri
+    const currentName = `${cblock.props.uri!.split("/").pop()}`; // filename.fileExt
 
     const cachePath = await checkFileInCache(currentName, bucket);
 
