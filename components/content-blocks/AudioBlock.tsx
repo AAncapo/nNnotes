@@ -125,11 +125,11 @@ export function AudioBlock({
         </Text>
         <View className="flex-row space-x-4 items-center">
           <TouchableOpacity
-            className="px-2 border-2 border-slate-500 rounded-xs items-center"
+            className="px-1 border-2 border-slate-500 rounded-sm items-center"
             onPress={changeRate}
           >
-            <Text className="font-bold text-slate-500 text-center">
-              x{playRate}
+            <Text className="font-extrabold text-sm text-slate-500 text-center">
+              {playRate}X
             </Text>
           </TouchableOpacity>
           <TouchableOpacity

@@ -15,6 +15,7 @@ const Colors = (colorScheme: ColorSchemeName) => {
     text: colorScheme === "dark" ? "#f8fafc" : "black",
     icons: colorScheme === "dark" ? "white" : "black",
     checkbox: colorScheme === "dark" ? "white" : "black",
-    separator: colorScheme === "dark" ? "#e5e7eb" : "gray",
+    separator:
+      colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
   };
 };

@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { checkFileInCache, getFile } from "@/lib/supabase-storage";
+import { Octicons } from "@expo/vector-icons";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Image,
@@ -6,8 +8,9 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
-import { ContentBlock } from "types";
+import { ContentBlock, SUPABASE_BUCKET } from "types";
 
 interface ImageBlockProps {
   index: number;
@@ -16,6 +19,12 @@ interface ImageBlockProps {
   wrappedNum?: number;
   maxPerRow: 3 | 4;
   onSelected: (index: number) => void;
+}
+
+enum ImageStatus {
+  NULL = "null",
+  NOT_LOADED = "!loaded",
+  LOADED = "loaded",
 }
 
 export function ImageBlock({
@@ -27,10 +36,39 @@ export function ImageBlock({
   onSelected,
 }: ImageBlockProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [uri, setUri] = useState<string | null>(block.props.uri || null);
 
-  const uri = useMemo(() => {
-    if (block.props.uri) return block.props.uri;
-  }, [block]);
+  // useEffect(() => {
+  //   if (!block.props.filename) return;
+
+  //   checkFileInCache(block.props.filename, SUPABASE_BUCKET.IMAGES).then(
+  //     (res) => {
+  //       if (res) setUri(res ? block.props.uri || "" : null);
+  //     }
+  //   );
+  // }, []);
+
+  const onDownload = async () => {
+    try {
+      setIsLoading(true);
+      if (!block.props.filename)
+        throw new Error(
+          "Image doesn't have a filename assigned. It cannot be downloaded"
+        );
+
+      const cachePath = await getFile(
+        block.props.filename,
+        SUPABASE_BUCKET.IMAGES
+      );
+      if (cachePath) {
+        setUri(cachePath);
+      }
+    } catch (error: any) {
+      console.log(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View
@@ -39,27 +77,38 @@ export function ImageBlock({
         { width: maxPerRow === 3 ? "33%" : "25%" },
       ]}
     >
-      {!isLoading ? (
-        <TouchableOpacity
-          onPress={() => onSelected(index)}
-          className="w-full h-full"
-        >
-          <Image
-            source={{ uri }}
-            className="w-full h-full rounded-sm"
-            resizeMode="cover"
-          />
-          {isOverflow && (
-            <View style={styles.overflowOverlay}>
-              <Text style={styles.overflowText}>
-                + {wrappedNum?.toString()}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      ) : (
-        <ActivityIndicator color={"gray"} />
-      )}
+      <View className="w-full h-full rounded-md overflow-hidden bg-gray-400">
+        {uri ? (
+          <TouchableOpacity
+            style={styles.wrapperTouchable}
+            onPress={() => onSelected(index)}
+          >
+            <Image
+              source={{ uri }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ) : (
+          <View className="w-full h-full items-center justify-center">
+            {isLoading ? (
+              <ActivityIndicator size={24} color="white" />
+            ) : (
+              <TouchableOpacity
+                style={styles.wrapperTouchable}
+                onPress={onDownload}
+              >
+                <Octicons name="download" size={24} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        {isOverflow && (
+          <View style={styles.overflowOverlay}>
+            <Text style={styles.overflowText}>+ {wrappedNum?.toString()}</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -69,6 +118,12 @@ const styles = StyleSheet.create({
     // width: "33%", // Para 3 imágenes por fila (usar 25% para 4)
     aspectRatio: 1,
     padding: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wrapperTouchable: {
+    width: "100%",
+    height: "100%",
     alignItems: "center",
     justifyContent: "center",
   },

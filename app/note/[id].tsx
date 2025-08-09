@@ -179,7 +179,7 @@ export default function NoteDetails() {
             />
           );
         case ContentType.AUDIO:
-          console.log("audio. " + blockOrGroup.props.uploadedAt);
+          // console.log("audio. " + blockOrGroup.props.uploadedAt);
           return (
             <AudioBlock
               key={blockOrGroup.id}
@@ -210,7 +210,7 @@ export default function NoteDetails() {
   }
 
   return (
-    <SafeAreaView
+    <View
       className={`flex-1`}
       style={{ backgroundColor: colorScheme?.secondary }}
     >
@@ -280,6 +280,6 @@ export default function NoteDetails() {
         onDelete={handleDeleteBlock}
         editBlockProps={handleEditBlockProps}
       />
-    </SafeAreaView>
+    </View>
   );
 }

@@ -95,11 +95,7 @@ export default function ImageViewer({
         >
           <View className="flex-1 flex-row items-start space-x-4">
             <TouchableOpacity className="p-4" onPress={handleDelete}>
-              <MaterialIcons
-                name="delete"
-                size={24}
-                color={colorScheme?.iconButton}
-              />
+              <MaterialIcons name="delete" size={24} color="white" />
             </TouchableOpacity>
           </View>
           <View className="flex-1 items-center">
@@ -109,11 +105,7 @@ export default function ImageViewer({
           </View>
           <View className="flex-1">
             <TouchableOpacity className="self-end p-4" onPress={onClose}>
-              <AntDesign
-                name="close"
-                size={24}
-                color={colorScheme?.iconButton}
-              />
+              <AntDesign name="close" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </View>
@@ -158,7 +150,7 @@ export default function ImageViewer({
             disabled={images.length === 1}
             className="p-10"
           >
-            <AntDesign name="left" size={28} color={colorScheme?.iconButton} />
+            <AntDesign name="left" size={28} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -166,7 +158,7 @@ export default function ImageViewer({
             disabled={images.length === 1}
             className="p-10"
           >
-            <AntDesign name="right" size={28} color={colorScheme?.iconButton} />
+            <AntDesign name="right" size={28} color="white" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

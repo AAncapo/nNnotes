@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { useNotesStore } from "@/store/useNotesStore";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -18,7 +18,9 @@ export default function Index() {
   }, []);
 
   return loading || !initialized ? (
-    <ActivityIndicator size={30} />
+    <View className="flex-1 justify-center items-center">
+      <ActivityIndicator size={30} />
+    </View>
   ) : (
     <Redirect href="/notes" />
   );

@@ -18,7 +18,7 @@ function NoteHeader({ title, updateTitle, submitTitle }: HeaderProps) {
         backgroundColor={colorScheme?.secondary}
       />
       <View
-        className={`flex-row items-center justify-between px-4`}
+        className={`flex-row items-center justify-between px-4 py-1`}
         // style={{ backgroundColor: colorScheme?.secondary }}
       >
         {/* Title */}
@@ -27,7 +27,7 @@ function NoteHeader({ title, updateTitle, submitTitle }: HeaderProps) {
           style={{ color: colorScheme?.text }}
           defaultValue={title}
           onChangeText={updateTitle}
-          placeholder="Añade un título"
+          placeholder="Título"
           placeholderTextColor={"gray"}
           onSubmitEditing={submitTitle}
         />

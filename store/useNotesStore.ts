@@ -12,12 +12,15 @@ import {
 import { useAuthStore } from "./useAuthStore";
 import {
   checkFileInCache,
+  getFile,
   saveFileToCache,
   uploadFile,
 } from "@/lib/supabase-storage";
 import { supabase } from "@/lib/supabase";
 import { getData, storeData } from "@/lib/async-storage";
-import { getDateISOString } from "@/lib/utils";
+import { getDateISOString, getRandomID } from "@/lib/utils";
+
+const STORAGE_KEY = "notes";
 
 interface NotesState {
   notes: Note[];
@@ -33,18 +36,24 @@ interface NotesState {
     note: Partial<Note>,
     setUpdatedAt?: boolean
   ) => Promise<void>;
-  moveToTrash: (id: string) => Promise<void>;
-  deleteNote: (id: string) => void;
+  deleteNote: (id: string) => Promise<void>;
   getNote: (id: string) => Note | undefined;
-  getNoteByFolder: (folderId: string | null) => Note[];
+  getNoteByFolder: (folderId?: string) => Note[];
   setSelectedFolder: (selectedFolder: string | null) => void;
+  addFolder: (name: string) => Promise<void>;
+  updateFolder: (id: string, propName: string, value: any) => void;
+  deleteFolder: (id: string) => Promise<void>;
   getAllTags: () => string[];
   initializeNotes: () => Promise<void>;
   syncNotes: () => Promise<void>;
 }
 
+const DELETED_FOLDER_ID = "deleted";
+const PROTECTED_FOLDER_ID = "protected";
+
 const DEFAULT_FOLDERS = [
-  { id: "deleted", name: "Trash", notes: [] },
+  { id: DELETED_FOLDER_ID, name: "Trash" },
+  { id: PROTECTED_FOLDER_ID, name: "Protected" },
 ] as NotesFolder[];
 
 export const useNotesStore = create<NotesState>()((set, get) => ({
@@ -54,23 +63,8 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
   loading: false,
 
   setNotes: async (notes) => {
-    // let folders = [...get().folders];
-
-    // const notes = newNotes.map((n) => {
-    //   // Add to deleted folder if necessary
-    //   if (
-    //     n.isDeleted &&
-    //     !folders
-    //       .find((f) => f.id === "deleted")!
-    //       .notes.some((dnId) => dnId === n.id)
-    //   ) {
-    //     !folders.find((f) => f.id === "deleted")!.notes.push(n.id);
-    //   }
-    //   return n;
-    // });
-
     set({ notes });
-    await storeData("notes", { ...get(), notes });
+    await storeData(STORAGE_KEY, { ...get(), notes });
   },
 
   addNote: async (note) => {
@@ -105,25 +99,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     ]);
   },
 
-  moveToTrash: async (id) => {
-    // Remueve la nota de cualquier folder dnde se encuentre
-    // y la añade al deleted folder
-    const folders = get().folders.map((f) => {
-      if (f.id !== "deleted") f.notes.filter((n) => n !== id);
-      else {
-        if (!f.notes.includes(id)) {
-          f.notes.push(id);
-        }
-      }
-
-      return f;
-    });
-
-    set({ folders });
-    await storeData("notes", { ...get(), folders });
-  },
-
-  deleteNote: (id) => {
+  deleteNote: async (id) => {
     get().setNotes(get().notes.filter((n) => n.id !== id));
   },
 
@@ -132,21 +108,30 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
   getNote: (id) => get().notes.find((n) => n.id === id),
 
   getNoteByFolder: (folderId) => {
-    const folder = folderId
-      ? get().folders.find((f) => f.id === folderId)
-      : null;
+    // by default returns all except deleted, protected and notes without folder defined or existent
+    return get().notes.filter((n) =>
+      folderId
+        ? n.folder === folderId
+        : (n.folder !== DELETED_FOLDER_ID &&
+            n.folder !== PROTECTED_FOLDER_ID) ||
+          !get().folders.find((f) => f.id === folderId)
+    );
+  },
 
-    // by default returns all not deleted notes
-    if (!folder) {
-      const deletedFolder = get().folders.find((f) => f.id === "deleted");
-      return get().notes.filter(
-        (n) => !deletedFolder!.notes.some((dn) => dn === n.id)
-      );
-    }
+  addFolder: async (name) => {
+    const folders = [...get().folders, { id: getRandomID(), name }];
+    set({ folders });
+    await storeData(STORAGE_KEY, { ...get(), folders });
+  },
 
-    return folder.notes
-      .map((id) => get().notes.find((n) => n.id === id))
-      .filter((n) => n !== undefined);
+  updateFolder: (id, propName, value) => {},
+
+  deleteFolder: async (id) => {
+    if (id === DELETED_FOLDER_ID || id === PROTECTED_FOLDER_ID) return;
+
+    const folders = [...get().folders.filter((f) => f.id !== id)];
+    set({ folders });
+    await storeData(STORAGE_KEY, { ...get(), folders });
   },
 
   getAllTags: () => {
@@ -166,10 +151,34 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
       set({ loading: true });
       const data = await getData("notes");
       if (data) {
+        // Check notes deleted more than 7 days ago
+        const expiredNotesId: string[] = (
+          data.notes.filter((n: Note) => {
+            if (n.folder === DELETED_FOLDER_ID) {
+              const msDiff =
+                new Date().getTime() - new Date(n.updatedAt).getTime();
+              const msPerDay = 1000 * 60 * 60 * 24;
+              const diffInDays = msDiff / msPerDay;
+
+              return diffInDays >= 7; // return notes 7 days older
+            }
+          }) as Note[]
+        ).map((n) => n.id);
+
+        const noteCount = data.notes.length;
+        console.log(`${expiredNotesId.length} expired notes`);
+
+        // Remove expiredNotes from data.notes
+        const notes = (data.notes as Note[]).filter(
+          (n) => !expiredNotesId.some((id) => n.id === id)
+        );
+
+        console.log(`Removed ${noteCount - notes.length} expired notes`);
+
         set({
           ...get(),
           loading: false,
-          notes: [...data.notes],
+          notes,
           folders: [...data.folders],
         });
       }
@@ -207,177 +216,174 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
         .select("id, updated_at");
 
       if (error) throw new Error(error.message);
-      if (data) {
-        let notesToFetch = [];
-        let notesToUpsert: Note[] = [];
 
-        const localNotes = get().notes;
-        const remoteNotes = data;
+      if (!data) {
+        console.log(`Couldn't get any data from notes. ${data}`);
+        return;
+      }
 
-        let fetchUpdated = 0;
-        let fetchNew = 0;
+      let notesToFetch = [];
+      let notesToUpsert: Note[] = [];
 
-        // Check remote notes that need to be fetched
-        for (const remoteNote of remoteNotes) {
-          const localNote = localNotes.find((n) => n.id === remoteNote.id);
+      // Avoid syncing deleted notes
+      const localNotes = get().notes.filter((n) => n.folder !== "deleted");
+      const remoteNotes = data;
 
-          if (!localNote) {
-            // Note only exists on server
-            notesToFetch.push(remoteNote);
-            fetchNew++;
-            continue;
-          } else if (
-            new Date(remoteNote.updated_at) > new Date(localNote.updatedAt)
-          ) {
-            // Remote version is newer
-            notesToFetch.push(remoteNote);
-            fetchUpdated++;
-            console.log(
-              `localNote: ${new Date(localNote.updatedAt)} -- remote: ${new Date(remoteNote.updated_at)}`
-            );
-          }
-        }
+      let fetchUpdated = 0;
+      let fetchNew = 0;
 
-        let upsertNew = 0;
-        let upsertUpdated = 0;
+      // Check remote notes that need to be fetched
+      for (const remoteNote of remoteNotes) {
+        const localNote = localNotes.find((n) => n.id === remoteNote.id);
 
-        // Check local notes that need upserted
-        for (const localNote of localNotes) {
-          const remoteNote = remoteNotes.find((n) => n.id === localNote.id);
-
-          if (!remoteNote) {
-            // Note only exists on local
-            notesToUpsert.push(localNote);
-            upsertNew++;
-            continue;
-          } else if (
-            new Date(remoteNote.updated_at) < new Date(localNote.updatedAt)
-          ) {
-            upsertUpdated++;
-            // Local version is newer
-            notesToUpsert.push(localNote);
-          }
-        }
-
-        // Execute sync operations
-        // Fetching...
-        if (notesToFetch.length > 0) {
+        if (!localNote) {
+          // Note only exists on server
+          notesToFetch.push(remoteNote);
+          fetchNew++;
+          continue;
+        } else if (
+          new Date(remoteNote.updated_at) > new Date(localNote.updatedAt)
+        ) {
+          // Remote version is newer
+          notesToFetch.push(remoteNote);
+          fetchUpdated++;
           console.log(
-            `fetching ${fetchNew} new notes and ${fetchUpdated} updated notes...`
+            `localNote: ${new Date(localNote.updatedAt)} -- remote: ${new Date(remoteNote.updated_at)}`
           );
-          const { data, error: fetchError } = await supabase
-            .from("notes")
-            .select("*");
+        }
+      }
 
-          if (fetchError) throw new Error(fetchError.message);
-          if (!data) {
-            console.log("data empty");
-            return;
-          }
+      let upsertNew = 0;
+      let upsertUpdated = 0;
 
-          // Leave only requested notes
-          const fetchedNotes = data.filter((n) =>
-            notesToFetch.some((ntf) => ntf.id === n.id)
-          );
+      // Check local notes that need upserted
+      for (const localNote of localNotes) {
+        const remoteNote = remoteNotes.find((n) => n.id === localNote.id);
 
-          const updatedNotes: Note[] = [
-            ...get().notes.map((n) => {
-              const fetchedNote = fetchedNotes.find((fn) => fn.id === n.id);
-              return fetchedNote ? { ...fetchedNote.note } : n;
-            }),
-          ];
-          const newNotes = fetchedNotes.filter(
-            (n) => !updatedNotes.some((note) => note.id === n.id)
-          );
+        if (!remoteNote) {
+          // Note only exists on local
+          notesToUpsert.push(localNote);
+          upsertNew++;
+          continue;
+        } else if (
+          new Date(remoteNote.updated_at) < new Date(localNote.updatedAt)
+        ) {
+          upsertUpdated++;
+          // Local version is newer
+          notesToUpsert.push(localNote);
+        }
+      }
 
-          console.log(fetchedNotes.length);
+      // Execute sync operations
+      // Fetching...
+      if (notesToFetch.length > 0) {
+        console.log(
+          `fetching ${fetchNew} new notes and ${fetchUpdated} updated notes...`
+        );
+        const { data, error: fetchError } = await supabase
+          .from("notes")
+          .select("*");
 
-          await get().setNotes([
-            ...updatedNotes,
-            ...newNotes.map((n) => n.note),
-          ]);
+        if (fetchError) throw new Error(fetchError.message);
+        if (!data) {
+          console.log("data empty");
+          return;
         }
 
-        // Upserting...
-        if (notesToUpsert.length > 0) {
-          console.log("upserting...");
-          let updatedNotes = [] as Note[];
-          // Update storage buckets
-          for (const note of notesToUpsert) {
-            const files = note.content.filter(
-              (c) =>
-                c.type === ContentType.IMAGE || c.type === ContentType.AUDIO
-            );
+        // Leave only requested notes
+        const fetchedNotes = data.filter((n) =>
+          notesToFetch.some((ntf) => ntf.id === n.id)
+        );
 
-            for (const f of files) {
-              const bucket =
-                f.type === ContentType.IMAGE
-                  ? SUPABASE_BUCKET.IMAGES
-                  : SUPABASE_BUCKET.AUDIOS;
+        const updatedNotes: Note[] = [
+          ...get().notes.map((n) => {
+            const fetchedNote = fetchedNotes.find((fn) => fn.id === n.id);
+            return fetchedNote ? { ...fetchedNote.note } : n;
+          }),
+        ];
+        const newNotes = fetchedNotes.filter(
+          (n) => !updatedNotes.some((note) => note.id === n.id)
+        );
 
-              if (!f.props.filename) continue;
+        await get().setNotes([...updatedNotes, ...newNotes.map((n) => n.note)]);
+      }
 
-              // skip image if was already uploaded
-              if (!f.props.uploadedAt) {
-                console.log(`Uploading ${bucket} file...`);
-                await uploadFile(f.props.filename, bucket);
-                // push to updatedNotes
-                updatedNotes.push({
-                  ...note,
-                  content: [
-                    ...note.content.map((c) => {
-                      return c.id === f.id
-                        ? {
-                            ...f,
-                            props: {
-                              ...f.props,
-                              uploadedAt: getDateISOString(),
-                            },
-                          }
-                        : c;
-                    }),
-                  ],
-                });
-              }
+      // Upserting...
+      if (notesToUpsert.length > 0) {
+        console.log("upserting...");
+        let updatedNotes = [] as Note[];
+        // Update storage buckets
+        for (const note of notesToUpsert) {
+          const files = note.content.filter(
+            (c) => c.type === ContentType.IMAGE || c.type === ContentType.AUDIO
+          );
+
+          for (const f of files) {
+            const bucket =
+              f.type === ContentType.IMAGE
+                ? SUPABASE_BUCKET.IMAGES
+                : SUPABASE_BUCKET.AUDIOS;
+
+            if (!f.props.filename) continue;
+
+            // skip image if was already uploaded
+            if (!f.props.uploadedAt) {
+              console.log(`Uploading ${bucket} file...`);
+              await uploadFile(f.props.filename, bucket);
+              // push to updatedNotes
+              updatedNotes.push({
+                ...note,
+                content: [
+                  ...note.content.map((c) => {
+                    return c.id === f.id
+                      ? {
+                          ...f,
+                          props: {
+                            ...f.props,
+                            uploadedAt: getDateISOString(),
+                          },
+                        }
+                      : c;
+                  }),
+                ],
+              });
             }
           }
+        }
 
-          // update local state uploadedAt value
-          await get().setNotes([
-            ...get().notes.map((n) => {
-              const updatedNote = updatedNotes.find((un) => un.id === n.id);
-              return !updatedNote ? n : updatedNote;
-            }),
-          ]);
-
-          // update array to save in server with uploadedAt value
-          notesToUpsert = notesToUpsert.map((n) => {
+        // update local state uploadedAt value
+        await get().setNotes([
+          ...get().notes.map((n) => {
             const updatedNote = updatedNotes.find((un) => un.id === n.id);
             return !updatedNote ? n : updatedNote;
-          });
+          }),
+        ]);
 
-          console.log(
-            `upserting ${upsertNew} new notes and ${upsertUpdated} updated...`
-          );
+        // update array to save in server with uploadedAt value
+        notesToUpsert = notesToUpsert.map((n) => {
+          const updatedNote = updatedNotes.find((un) => un.id === n.id);
+          return !updatedNote ? n : updatedNote;
+        });
 
-          const { error: upsertError } = await supabase.from("notes").upsert(
-            notesToUpsert.map((note) => ({
-              id: note.id,
-              user_id: user?.id,
-              email: user.email,
-              updated_at: note.updatedAt,
-              created_at: note.createdAt,
-              note,
-            })),
-            { onConflict: "id" }
-          );
+        console.log(
+          `upserting ${upsertNew} new notes and ${upsertUpdated} updated...`
+        );
 
-          if (upsertError) throw new Error(upsertError.message);
+        const { error: upsertError } = await supabase.from("notes").upsert(
+          notesToUpsert.map((note) => ({
+            id: note.id,
+            user_id: user?.id,
+            email: user.email,
+            updated_at: note.updatedAt,
+            created_at: note.createdAt,
+            note,
+          })),
+          { onConflict: "id" }
+        );
 
-          console.log(`succesfully upserted ${notesToUpsert.length} notes!!!`);
-        }
-      } else {
-        console.log(`Couldnt get any data from notes. ${data}`);
+        if (upsertError) throw new Error(upsertError.message);
+
+        console.log(`succesfully upserted ${notesToUpsert.length} notes!!!`);
       }
     } catch (error: any) {
       Alert.alert(

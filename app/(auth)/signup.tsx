@@ -26,7 +26,7 @@ export default function SignUp() {
 
   useEffect(() => {
     if (user) {
-      router.push("/");
+      router.push("/notes");
     }
   }, [user]);
 

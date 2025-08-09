@@ -21,7 +21,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      router.push("/");
+      router.push("/notes");
     }
   }, [user]);
 

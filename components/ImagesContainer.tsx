@@ -31,7 +31,7 @@ function ImagesContainer({
 
   const renderImage = (img: ContentBlock, index: number) => {
     const isOverflow = index === maxPerRow - 1 && images.length > maxPerRow;
-    console.log("image. " + img.props.uploadedAt);
+    // console.log("image. " + img.props.uploadedAt);
     return (
       <ImageBlock
         key={img.id}

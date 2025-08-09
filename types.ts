@@ -15,6 +15,7 @@ export interface Note {
   title: string;
   content: ContentBlock[];
   tags?: string[];
+  folder?: string;
   isPinned?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -51,5 +52,4 @@ export type ChecklistItem = {
 export interface NotesFolder {
   id: string;
   name: string;
-  notes: string[];
 }

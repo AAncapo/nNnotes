@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   TouchableOpacity,
   useColorScheme,
@@ -8,6 +8,7 @@ import {
   Text,
   View,
   RefreshControl,
+  Modal,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -32,14 +33,15 @@ export default function Notes() {
   const {
     notes,
     updateNote,
-    moveToTrash,
+    deleteNote,
     getNoteByFolder,
     folders,
     selectedFolder,
     syncNotes,
     loading,
   } = useNotesStore();
-
+  const [noteOptionsModalVisible, setNoteOptionsModalVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<string | null>(null);
   const folderName = useMemo(
     () =>
       !selectedFolder
@@ -49,7 +51,7 @@ export default function Notes() {
   );
 
   const filteredNotes = useMemo(() => {
-    return getNoteByFolder(selectedFolder);
+    return getNoteByFolder(selectedFolder || undefined);
   }, [notes, selectedFolder, folders]);
 
   const sortedNotes = useMemo(() => {
@@ -63,25 +65,27 @@ export default function Notes() {
     });
   }, [filteredNotes]);
 
+  // TODO: abrir modal para borrar o fijar
+  // updateNote(item.id, { isPinned: !item.isPinned }, false)
+
+  useEffect(() => {
+    if (selectedNote) setNoteOptionsModalVisible(true);
+  }, [selectedNote]);
+
   const renderNoteCard = useCallback(
     ({ item }: { item: Note }) => {
       return (
         <NoteCard
           key={item.id}
           note={item}
-          onDelete={moveToTrash}
-          onLongPress={() =>
-            updateNote(item.id, { isPinned: !item.isPinned }, false)
-          }
+          onLongPress={(id) => setSelectedNote(id)}
         />
       );
     },
     [notes]
   );
 
-  const onRefresh = async () => {
-    await syncNotes();
-  };
+  const onRefresh = async () => await syncNotes();
 
   const handleCreateNote = () => {
     if (isPlatformWeb) {
@@ -101,10 +105,18 @@ export default function Notes() {
     }
   };
 
+  const closeOptionsModal = () => {
+    setNoteOptionsModalVisible(false);
+    setSelectedNote(null);
+  };
+
   console.log(`showing ${sortedNotes.length} from ${notes.length} notes...`);
 
   return (
-    <GestureHandlerRootView className={`flex-1 ${isPlatformWeb && "flex-row"}`}>
+    <View
+      className={`flex-1 ${isPlatformWeb && "flex-row"}`}
+      style={{ backgroundColor: colorScheme?.background }}
+    >
       {/* Notes list */}
       {!view || view === VIEW.NOTES ? (
         <View
@@ -139,32 +151,20 @@ export default function Notes() {
 
             {/* <SearchBar onSubmit={addNote} /> */}
 
-            {/* <View className="flex-row space-x-3">
-            <View>
-              <TouchableOpacity
-                className={`${showDeleted ? "bg-gray-500" : "bg-gray-700"} p-2 px-4 gap-2 rounded-full flex-row items-center`}
-                onPress={() => setShowDeleted(!showDeleted)}
-              >
-                <Ionicons name="trash-bin-outline" size={15} color="white" />
-                <Text
-                  className="text-center font-medium text-sm"
-                  style={{ color: colorScheme?.text }}
-                >
-                  Papelera
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {getAllTags().map((tag) => (
-              <TouchableOpacity className="bg-gray-800">
-                <Text
-                  className="text-center"
-                  style={{ color: colorScheme?.text }}
-                >
-                  {tag}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View> */}
+            {/* 
+            <View className="flex-row space-x-3">
+              {getAllTags().map((tag) => (
+                <TouchableOpacity className="bg-gray-800">
+                  <Text
+                    className="text-center"
+                    style={{ color: colorScheme?.text }}
+                  >
+                    {tag}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View> 
+            */}
           </View>
           <View className="flex-1">
             <FlatList
@@ -230,6 +230,58 @@ export default function Notes() {
           <Ionicons name="add" size={28} color={colorScheme?.iconButton} />
         </TouchableOpacity>
       )}
-    </GestureHandlerRootView>
+
+      {/* NoteCard Options Modal */}
+      <Modal
+        visible={noteOptionsModalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeOptionsModal}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="w-[90%] bg-white rounded-xl p-4">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-semibold">Note Options</Text>
+              <TouchableOpacity
+                onPress={() => setNoteOptionsModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <View className="space-y-4">
+              <TouchableOpacity
+                onPress={async () => {
+                  updateNote(
+                    selectedNote!,
+                    {
+                      isPinned: !filteredNotes.find(
+                        (n) => n.id === selectedNote
+                      )!.isPinned,
+                    },
+                    false
+                  );
+                  closeOptionsModal();
+                }}
+              >
+                <Text>
+                  {filteredNotes.find((n) => n.id === selectedNote)?.isPinned
+                    ? "Unpin Note"
+                    : "Pin Note"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  deleteNote(selectedNote!);
+                  closeOptionsModal();
+                }}
+              >
+                <Text>Delete Note</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }

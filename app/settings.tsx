@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useNotesStore } from "@/store/useNotesStore";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -31,6 +32,8 @@ function Settings() {
     else router.back();
   };
 
+  const allNotes = useMemo(() => getNoteByFolder().length, [folders]);
+
   return (
     <View
       className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
@@ -57,20 +60,11 @@ function Settings() {
         <ScrollView>
           {/* Account Section */}
           <View style={[styles.section]}>
-            <Text style={[styles.sectionTitle, { color: theme?.text }]}>
-              Cuenta
-            </Text>
-
             {user ? (
               <>
                 <View style={styles.accountCard}>
                   <View style={styles.profileInfo}>
-                    <View
-                      style={[
-                        styles.avatar,
-                        { backgroundColor: theme?.background },
-                      ]}
-                    >
+                    <View style={[styles.avatar, { backgroundColor: "#000" }]}>
                       <Text style={styles.avatarText}>
                         {user.email?.charAt(0).toUpperCase()}
                       </Text>
@@ -115,16 +109,12 @@ function Settings() {
                       onPress={signOut}
                     >
                       <AntDesign name="logout" size={20} color="white" />
-                      <Text
-                        style={[
-                          styles.buttonText,
-                          { color: theme?.buttonText },
-                        ]}
-                      >
+                      <Text style={[styles.buttonText, { color: "white" }]}>
                         Sign Out
                       </Text>
                     </TouchableOpacity>
                   </View>
+                  {/* Syncing Indicator */}
                   {loading && (
                     <View className="items-center justify-center gap-2 py-2">
                       <ActivityIndicator color={"gray"} />
@@ -171,7 +161,7 @@ function Settings() {
             >
               <Text style={{ color: theme?.text }}>All Notes</Text>
               <Text className="font-semibold" style={{ color: theme?.text }}>
-                {getNoteByFolder(null).length}
+                {allNotes}
               </Text>
             </TouchableOpacity>
             {folders.map((f) => (
@@ -182,7 +172,7 @@ function Settings() {
               >
                 <Text style={{ color: theme?.text }}>{f.name}</Text>
                 <Text className="font-semibold" style={{ color: theme?.text }}>
-                  {f.notes.length}
+                  {getNoteByFolder(f.id).length}
                 </Text>
               </TouchableOpacity>
             ))}

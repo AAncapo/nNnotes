@@ -56,7 +56,11 @@ function useNote(id?: string) {
       return;
     }
 
-    if (!hasChanges) return;
+    if (!hasChanges) {
+      goBack && handleGoBack();
+      return;
+    }
+
     if (!isNewNote) {
       await updateNote(id as string, { title, content });
     } else {
@@ -79,6 +83,7 @@ function useNote(id?: string) {
             props: {
               ...props[0],
             },
+            updatedAt: getDateISOString(),
           },
         ];
         break;
@@ -92,6 +97,7 @@ function useNote(id?: string) {
                 { id: getRandomID(), text: "", checked: false, focus: false },
               ],
             },
+            updatedAt: getDateISOString(),
           },
         ];
         break;
@@ -101,6 +107,7 @@ function useNote(id?: string) {
             id: getRandomID(),
             type,
             props: p,
+            updatedAt: getDateISOString(),
           };
         });
         break;
@@ -116,6 +123,7 @@ function useNote(id?: string) {
               duration: props[0].duration,
               createdAt: getDateISOString(),
             },
+            updatedAt: getDateISOString(),
           },
         ];
         break;
@@ -186,7 +194,9 @@ function useNote(id?: string) {
 
   const handleUpdateBlock = (updatedBlock: ContentBlock) => {
     const newContent = content.map((block) =>
-      block.id === updatedBlock.id ? updatedBlock : block
+      block.id === updatedBlock.id
+        ? { ...updatedBlock, updatedAt: getDateISOString() }
+        : block
     );
     setContent(newContent);
     if (!hasChanges) setHasChanges(true);
@@ -194,9 +204,12 @@ function useNote(id?: string) {
 
   const handleDeleteBlock = (blockId: string) => {
     const deleteIndex = content.findIndex((b) => b.id === blockId);
+    if (deleteIndex === -1) return;
+
     const isLast = deleteIndex === content.length - 1;
     const currentIsText = content[deleteIndex].type === ContentType.TEXT;
-    const prevIsText = content[deleteIndex - 1].type === ContentType.TEXT;
+    const prevIsText =
+      deleteIndex > 0 && content[deleteIndex - 1].type === ContentType.TEXT;
 
     // Si es texto y es el único o el último (y no hay un texto antes), no borrar
     if (
