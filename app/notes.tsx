@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   TouchableOpacity,
-  useColorScheme,
   FlatList,
   Text,
   View,
@@ -18,8 +17,7 @@ import NoteCard from "@/components/NoteCard";
 import NoteDetails from "./note/[id]";
 import Settings from "./settings";
 import Toolbar from "@/components/Toolbar";
-import SearchBar from "@/components/SearchBar";
-import TagList from "@/components/TagList";
+import SearchBar from "@/components/common/SearchBar";
 import useNote from "@/hooks/useNote";
 
 enum VIEW {

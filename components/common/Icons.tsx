@@ -5,6 +5,10 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 
+export const Back = ({ size = 24, color = "black" }) => (
+  <Ionicons name="arrow-back-outline" size={size} color={color} />
+);
+
 export const Pin = ({ size = 24, color = "black" }) => (
   <MaterialCommunityIcons name="pin" size={size} color={color} />
 );

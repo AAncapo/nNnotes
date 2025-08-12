@@ -38,6 +38,7 @@ function useNote(id?: string) {
   useEffect(() => {
     if (!isNewNote) {
       const existingNote = getNote(id);
+
       if (existingNote) {
         setCreatedAt(existingNote.createdAt);
         setTitle(existingNote.title);
@@ -49,7 +50,6 @@ function useNote(id?: string) {
           {
             text: "",
             placeholder: textPlaceholder,
-            // isExpanded: true,
             focus: false,
           },
         ]);
@@ -149,13 +149,6 @@ function useNote(id?: string) {
       default:
         break;
     }
-
-    // Shrink the previous last block if it was expanded (or any other expanded block)
-    // const updatedContent = content.map((block) =>
-    //   block.props.isExpanded
-    //     ? { ...block, props: { ...block.props, isExpanded: false } }
-    //     : block
-    // );
 
     let newContent: ContentBlock[] = [...content];
 
@@ -295,7 +288,6 @@ function useNote(id?: string) {
 
   const getNoteByFolder = (folderId?: string) => {
     // by default returns all except deleted, protected and notes without folder defined or existent
-    console.log("folderId: ", folderId);
     return notes.filter((n) =>
       folderId
         ? n.folder === folderId

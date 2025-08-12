@@ -3,7 +3,7 @@ import { PropsWithChildren, ReactNode } from "react";
 
 import useTheme from "@/hooks/useTheme";
 import { isPlatformWeb } from "@/lib/utils";
-import { Close, Delete, Pin, PinOff, Tags } from "./Icons";
+import { Close, Delete, Pin, PinOff, Tags } from "./common/Icons";
 
 interface ToolbarProps {
   selectedCount: number;

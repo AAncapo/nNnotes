@@ -1,4 +1,4 @@
-import { Pressable, TextInput, useColorScheme, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import { useRef } from "react";
 
 import useTheme from "@/hooks/useTheme";
