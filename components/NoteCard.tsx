@@ -1,19 +1,19 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { memo, useMemo } from "react";
 import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 import { ContentType, Note } from "@/types";
-import { convertAndFormatUTC, isPlatformWeb } from "@/lib/utils";
-import useTheme from "@/lib/themes";
+import { convertAndFormatUTC } from "@/lib/utils";
+import useTheme from "@/hooks/useTheme";
 
 interface NoteCardProps {
   note: Note;
+  onPress: (id: string) => void;
   onLongPress: (id: string) => void;
 }
 
-function NoteCard({ note, onLongPress }: NoteCardProps) {
-  const colorScheme = useTheme(useColorScheme());
+function NoteCard({ note, onPress, onLongPress }: NoteCardProps) {
+  const { colors, theme } = useTheme();
   const { id, title, isPinned, updatedAt } = note;
   const parsedUpdatedAt = convertAndFormatUTC(updatedAt);
 
@@ -22,7 +22,7 @@ function NoteCard({ note, onLongPress }: NoteCardProps) {
     if (!cblock) return "<undefined>";
     switch (cblock?.type) {
       case ContentType.TEXT:
-        return cblock.props.text !== "" ? cblock.props.text : "<empty>";
+        return cblock.props.text !== "" ? cblock.props.text?.trim() : "<empty>";
       case ContentType.AUDIO:
         return cblock.props.title || "Audio";
       case ContentType.IMAGE:
@@ -45,20 +45,18 @@ function NoteCard({ note, onLongPress }: NoteCardProps) {
 
   return (
     <TouchableOpacity
-      className={`py-2 ${useColorScheme() === "dark" ? "border-gray-800" : "border-gray-200"} border-b`}
-      style={{ borderColor: colorScheme?.separator }}
-      onPress={() =>
-        isPlatformWeb
-          ? router.setParams({ id })
-          : router.push({ pathname: "/note/[id]", params: { id } })
-      }
-      onLongPress={() => onLongPress(note.id)}
+      className={`py-2 ${theme === "dark" ? "border-gray-800" : "border-gray-200"} border-b`}
+      style={{
+        borderColor: colors.separator,
+      }}
+      onPress={() => onPress(id)}
+      onLongPress={() => onLongPress(id)}
       // delayLongPress={0}
     >
       <View className="flex-row justify-between">
         {/* Title */}
         <Text
-          className={`font-semibold text-lg ${useColorScheme() === "dark" ? "text-white" : "text-gray-800"} flex text-ellipsis`}
+          className={`font-semibold text-lg ${theme === "dark" ? "text-white" : "text-gray-800"} flex text-ellipsis`}
           numberOfLines={1}
         >
           {title === "" ? renderSubtitle : title}
@@ -66,11 +64,7 @@ function NoteCard({ note, onLongPress }: NoteCardProps) {
         {/* Pin */}
         {isPinned && (
           <View className="opacity-30">
-            <MaterialCommunityIcons
-              name="pin"
-              size={18}
-              color={colorScheme?.icons}
-            />
+            <MaterialCommunityIcons name="pin" size={18} color={colors.icon} />
           </View>
         )}
       </View>

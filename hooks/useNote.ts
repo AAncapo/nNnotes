@@ -3,14 +3,33 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { useNotesStore } from "@/store/useNotesStore";
-import { BlockProps, ContentBlock, ContentType } from "@/types";
+import {
+  BlockProps,
+  ContentBlock,
+  ContentType,
+  DELETED_FOLDER_ID,
+  PROTECTED_FOLDER_ID,
+} from "@/types";
 import { getDateISOString, getRandomID, isPlatformWeb } from "@/lib/utils";
 
 const textPlaceholder = "Start writing ...";
 
 function useNote(id?: string) {
   const isNewNote = !id || id === "new";
-  const { getNote, addNote, updateNote } = useNotesStore();
+  const {
+    notes,
+    getNote,
+    addNote,
+    updateNote,
+    folders,
+    setFolders,
+    tags,
+    setTags,
+    setNotes,
+    selectedFolder,
+    syncNotes,
+    loading,
+  } = useNotesStore();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState<ContentBlock[]>([]);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
@@ -268,6 +287,61 @@ function useNote(id?: string) {
       ]);
     }
   };
+
+  // Folder & tags handling ...
+  const selectFolder = (selectedFolder?: string) => {
+    useNotesStore.setState({ selectedFolder });
+  };
+
+  const getNoteByFolder = (folderId?: string) => {
+    // by default returns all except deleted, protected and notes without folder defined or existent
+    console.log("folderId: ", folderId);
+    return notes.filter((n) =>
+      folderId
+        ? n.folder === folderId
+        : (n.folder !== DELETED_FOLDER_ID &&
+            n.folder !== PROTECTED_FOLDER_ID) ||
+          !n.folder
+    );
+  };
+
+  const addFolder = async (name: string) => {
+    const updatedFolders = [...folders, { id: getRandomID(), name }];
+    setFolders(updatedFolders);
+  };
+
+  const updateFolder = async (id: string, propName: string, value: any) => {};
+
+  const deleteFolder = async (id: string) => {
+    if (id === DELETED_FOLDER_ID || id === PROTECTED_FOLDER_ID) return;
+
+    const updatedFolders = [...folders.filter((f) => f.id !== id)];
+    setNotes([
+      ...notes.map((n) => ({
+        ...n,
+        folder: n.folder === id ? undefined : n.folder,
+      })),
+    ]);
+
+    setFolders(updatedFolders);
+  };
+
+  const moveToFolder = async (noteId: string, folder: string | undefined) => {
+    // undefined is meant for notes without folder
+    await useNotesStore.getState().setNotes([
+      ...useNotesStore.getState().notes.map((n) =>
+        n.id === noteId
+          ? {
+              ...n,
+              folder,
+              updatedAt:
+                folder === DELETED_FOLDER_ID ? getDateISOString() : n.updatedAt,
+            }
+          : n
+      ),
+    ]);
+  };
+
   return {
     title,
     content,
@@ -281,6 +355,19 @@ function useNote(id?: string) {
     handleDeleteBlock,
     handlePickImage,
     createdAt,
+    notes,
+    getNoteByFolder,
+    moveToFolder,
+    selectFolder,
+    addFolder,
+    updateFolder,
+    deleteFolder,
+    selectedFolder,
+    syncNotes,
+    loading,
+    updateNote,
+    folders,
+    tags,
   };
 }
 

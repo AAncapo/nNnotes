@@ -7,22 +7,18 @@ import {
   TouchableOpacity,
   Image,
   Text,
-  SafeAreaView,
-  useColorScheme,
   TextInput,
   KeyboardAvoidingView,
 } from "react-native";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 
-import { BlockProps, ContentBlock } from "@/types";
-import useTheme from "@/lib/themes";
+import { ContentBlock } from "@/types";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface ImageViewerProps {
   images: ContentBlock[];
   initialIndex: number;
-  // editProp: (id: string, name: string) => void;
   onUpdate: (contentBlock: ContentBlock) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
@@ -32,11 +28,9 @@ export default function ImageViewer({
   images,
   initialIndex,
   onUpdate,
-  // editProp,
   onDelete,
   onClose,
 }: ImageViewerProps) {
-  const colorScheme = useTheme(useColorScheme());
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showText, setShowText] = useState(true);
 

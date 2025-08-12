@@ -5,26 +5,29 @@ import { router } from "expo-router";
 import {
   ContentBlock,
   ContentType,
+  DELETED_FOLDER_ID,
   Note,
   NotesFolder,
+  NoteTag,
+  PROTECTED_FOLDER_ID,
   SUPABASE_BUCKET,
 } from "@/types";
 import { useAuthStore } from "./useAuthStore";
 import {
   checkFileInCache,
-  getFile,
   saveFileToCache,
   uploadFile,
 } from "@/lib/supabase-storage";
 import { supabase } from "@/lib/supabase";
 import { getData, storeData } from "@/lib/async-storage";
-import { getDateISOString, getRandomID } from "@/lib/utils";
+import { getDateISOString } from "@/lib/utils";
 
 const STORAGE_KEY = "notes";
 
 interface NotesState {
   notes: Note[];
   folders: NotesFolder[];
+  tags: NoteTag[];
   selectedFolder: string | null;
   loading: boolean;
   setNotes: (notes: Note[]) => Promise<void>;
@@ -38,18 +41,11 @@ interface NotesState {
   ) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
   getNote: (id: string) => Note | undefined;
-  getNoteByFolder: (folderId?: string) => Note[];
-  setSelectedFolder: (selectedFolder: string | null) => void;
-  addFolder: (name: string) => Promise<void>;
-  updateFolder: (id: string, propName: string, value: any) => void;
-  deleteFolder: (id: string) => Promise<void>;
-  getAllTags: () => string[];
   initializeNotes: () => Promise<void>;
   syncNotes: () => Promise<void>;
+  setFolders: (folders: NotesFolder[]) => Promise<void>;
+  setTags: (tags: NoteTag[]) => Promise<void>;
 }
-
-const DELETED_FOLDER_ID = "deleted";
-const PROTECTED_FOLDER_ID = "protected";
 
 const DEFAULT_FOLDERS = [
   { id: DELETED_FOLDER_ID, name: "Trash" },
@@ -59,6 +55,7 @@ const DEFAULT_FOLDERS = [
 export const useNotesStore = create<NotesState>()((set, get) => ({
   notes: [],
   folders: [...DEFAULT_FOLDERS],
+  tags: [{ name: "tag1" }, { name: "tag2prueba" }],
   selectedFolder: null,
   loading: false,
 
@@ -77,7 +74,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    get().setNotes([...get().notes, newNote]);
+    await get().setNotes([...get().notes, newNote]);
   },
 
   updateNote: async (id, note, setUpdatedAt = true) => {
@@ -85,7 +82,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     if (note.content) {
       updatedContent = await saveNewFilesInCache(note.content);
     }
-    get().setNotes([
+    await get().setNotes([
       ...get().notes.map((n) =>
         n.id === id
           ? {
@@ -103,48 +100,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     get().setNotes(get().notes.filter((n) => n.id !== id));
   },
 
-  setSelectedFolder: (selectedFolder) => set({ selectedFolder }),
-
   getNote: (id) => get().notes.find((n) => n.id === id),
-
-  getNoteByFolder: (folderId) => {
-    // by default returns all except deleted, protected and notes without folder defined or existent
-    return get().notes.filter((n) =>
-      folderId
-        ? n.folder === folderId
-        : (n.folder !== DELETED_FOLDER_ID &&
-            n.folder !== PROTECTED_FOLDER_ID) ||
-          !get().folders.find((f) => f.id === folderId)
-    );
-  },
-
-  addFolder: async (name) => {
-    const folders = [...get().folders, { id: getRandomID(), name }];
-    set({ folders });
-    await storeData(STORAGE_KEY, { ...get(), folders });
-  },
-
-  updateFolder: (id, propName, value) => {},
-
-  deleteFolder: async (id) => {
-    if (id === DELETED_FOLDER_ID || id === PROTECTED_FOLDER_ID) return;
-
-    const folders = [...get().folders.filter((f) => f.id !== id)];
-    set({ folders });
-    await storeData(STORAGE_KEY, { ...get(), folders });
-  },
-
-  getAllTags: () => {
-    let tags: string[] = [];
-    const notes = get().notes;
-    for (const n of notes) {
-      if (!n.tags) continue;
-      for (const t of n.tags) {
-        if (!tags.includes(t.trim())) tags.push(t);
-      }
-    }
-    return tags;
-  },
 
   initializeNotes: async () => {
     try {
@@ -394,6 +350,11 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
       set({ loading: false });
     }
   },
+  setFolders: async (folders) => {
+    set({ folders });
+    await storeData(STORAGE_KEY, { ...get(), folders });
+  },
+  setTags: async (tags) => {},
 }));
 
 const saveNewFilesInCache = async (

@@ -1,4 +1,4 @@
-import { Modal, View } from "react-native";
+import { Alert, Modal, View } from "react-native";
 import { ImageBlock } from "./content-blocks/ImageBlock";
 import { ContentBlock } from "@/types";
 import { useState } from "react";
@@ -29,6 +29,13 @@ function ImagesContainer({
     setFullscreenVisible(true);
   };
 
+  const handleDelete = (id: string) => {
+    Alert.alert("Delete image", "Do you want to delete this image?", [
+      { text: "CANCEL" },
+      { text: "CONFIRM", onPress: () => onDelete(id) },
+    ]);
+  };
+
   const renderImage = (img: ContentBlock, index: number) => {
     const isOverflow = index === maxPerRow - 1 && images.length > maxPerRow;
     // console.log("image. " + img.props.uploadedAt);
@@ -56,7 +63,7 @@ function ImagesContainer({
           initialIndex={selectedIndex}
           // editProp={onEditProp}
           onUpdate={onUpdate}
-          onDelete={onDelete}
+          onDelete={handleDelete}
           onClose={() => setFullscreenVisible(false)}
         />
       </Modal>

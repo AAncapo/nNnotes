@@ -1,15 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Modal,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import { Alert, Modal, Text, TouchableOpacity, View } from "react-native";
 
 import { ContentType } from "@/types";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 
 interface BlockOptionsModalProps {
   type: ContentType;
@@ -28,20 +22,25 @@ function BlockOptionsModal({
   onDelete,
   editBlockProps,
 }: BlockOptionsModalProps) {
-  const colorScheme = useTheme(useColorScheme());
+  const { colors } = useTheme();
+
+  const handleDelete = () => {
+    Alert.alert("Delete audio file", "Do you want to delete this audio file?", [
+      { text: "CANCEL" },
+      { text: "CONFIRM", onPress: () => onDelete(id) },
+    ]);
+  };
+
   return (
     <Modal visible={visible} transparent onRequestClose={onClose}>
       <View className="flex-1 items-center justify-center">
         <View
           className={`rounded-xl p-4 gap-4`}
-          style={{ backgroundColor: colorScheme?.background }}
+          style={{ backgroundColor: colors.background }}
         >
           <View className="flex-row justify-end">
             <TouchableOpacity className="p-2 self-end" onPress={onClose}>
-              <Text
-                className="font-semibold"
-                style={{ color: colorScheme?.text }}
-              >
+              <Text className="font-semibold" style={{ color: colors.text }}>
                 Close
               </Text>
             </TouchableOpacity>
@@ -49,12 +48,12 @@ function BlockOptionsModal({
           {type === ContentType.AUDIO && (
             <TouchableOpacity
               className="items-center justify-center gap-2 rounded-xl p-4"
-              style={{ backgroundColor: colorScheme?.button }}
+              style={{ backgroundColor: colors.button }}
               onPress={() => editBlockProps(id, "title")}
             >
               <Text
                 className="text-xl text-center font-semibold"
-                style={{ color: colorScheme?.buttonText }}
+                style={{ color: colors.buttonText }}
               >
                 Editar título
               </Text>
@@ -63,7 +62,7 @@ function BlockOptionsModal({
           <TouchableOpacity
             className="flex-row items-center justify-center gap-2 border-2 border-red-500 rounded-xl p-4"
             onPress={() => {
-              onDelete(id);
+              handleDelete();
               onClose();
             }}
           >

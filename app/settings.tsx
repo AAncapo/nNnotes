@@ -1,7 +1,7 @@
-import useTheme from "@/lib/themes";
+import useNote from "@/hooks/useNote";
+import useTheme from "@/hooks/useTheme";
 import { isPlatformWeb } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useNotesStore } from "@/store/useNotesStore";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo } from "react";
@@ -11,18 +11,17 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
 
 function Settings() {
-  const theme = useTheme(useColorScheme());
+  const { theme, colors, changeTheme } = useTheme();
   const { user, signOut } = useAuthStore();
-  const { folders, setSelectedFolder, getNoteByFolder, syncNotes, loading } =
-    useNotesStore();
+  const { folders, selectFolder, getNoteByFolder, syncNotes, loading } =
+    useNote();
 
   const handleSelectFolder = (folderId: string | null) => {
-    setSelectedFolder(folderId);
+    selectFolder(folderId || undefined);
     if (isPlatformWeb) router.setParams({ view: "notes" });
     else router.back();
   };
@@ -38,18 +37,18 @@ function Settings() {
     <View
       className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
       style={{
-        backgroundColor: theme?.background,
+        backgroundColor: colors.background,
       }}
     >
       <View className="flex-1 p-4">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-4">
           <TouchableOpacity className="flex-1" onPress={handleGoBack}>
-            <Text style={{ color: theme?.text }}>Back</Text>
+            <Text style={{ color: colors.text }}>Back</Text>
           </TouchableOpacity>
           <Text
             className="flex-1 text-center text-2xl font-semibold"
-            style={{ color: theme?.text }}
+            style={{ color: colors.text }}
           >
             Settings
           </Text>
@@ -70,10 +69,10 @@ function Settings() {
                       </Text>
                     </View>
                     <View>
-                      <Text style={[styles.name, { color: theme?.text }]}>
+                      <Text style={[styles.name, { color: colors.text }]}>
                         {user.user_metadata.username || user.email}
                       </Text>
-                      <Text style={[styles.status, { color: theme?.text }]}>
+                      <Text style={[styles.status, { color: colors.text }]}>
                         {!user ? "Guest User" : "Signed In"}
                       </Text>
                     </View>
@@ -84,19 +83,19 @@ function Settings() {
                     <TouchableOpacity
                       style={[
                         styles.button,
-                        { backgroundColor: theme?.button },
+                        { backgroundColor: colors.button },
                       ]}
                       onPress={syncNotes}
                     >
                       <MaterialIcons
                         name="sync"
                         size={20}
-                        color={theme?.iconButton}
+                        color={colors.iconButton}
                       />
                       <Text
                         style={[
                           styles.buttonText,
-                          { color: theme?.buttonText },
+                          { color: colors.buttonText },
                         ]}
                       >
                         Sync Data
@@ -118,7 +117,7 @@ function Settings() {
                   {loading && (
                     <View className="items-center justify-center gap-2 py-2">
                       <ActivityIndicator color={"gray"} />
-                      <Text style={{ color: theme?.text }}>
+                      <Text style={{ color: colors.text }}>
                         Sincronizando...
                       </Text>
                     </View>
@@ -127,19 +126,19 @@ function Settings() {
               </>
             ) : (
               <View style={styles.guestCard}>
-                <Text style={[styles.guestText, { color: theme?.text }]}>
+                <Text style={[styles.guestText, { color: colors.text }]}>
                   You're using nNnotes as a guest
                 </Text>
                 <TouchableOpacity
                   style={[
                     styles.authButton,
-                    { backgroundColor: theme?.button },
+                    { backgroundColor: colors.button },
                   ]}
                   onPress={() => router.push("/signin")}
                 >
                   <Text
                     className="font-bold"
-                    style={{ color: theme?.buttonText }}
+                    style={{ color: colors.buttonText }}
                   >
                     Sign In / Register
                   </Text>
@@ -151,7 +150,7 @@ function Settings() {
           <View>
             <Text
               className="text-xl font-semibold"
-              style={{ color: theme?.text }}
+              style={{ color: colors.text }}
             >
               Folders
             </Text>
@@ -159,8 +158,8 @@ function Settings() {
               className="p-2 flex-row justify-between"
               onPress={() => handleSelectFolder(null)}
             >
-              <Text style={{ color: theme?.text }}>All Notes</Text>
-              <Text className="font-semibold" style={{ color: theme?.text }}>
+              <Text style={{ color: colors.text }}>All Notes</Text>
+              <Text className="font-semibold" style={{ color: colors.text }}>
                 {allNotes}
               </Text>
             </TouchableOpacity>
@@ -170,32 +169,26 @@ function Settings() {
                 className="p-2 flex-row justify-between"
                 onPress={() => handleSelectFolder(f.id)}
               >
-                <Text style={{ color: theme?.text }}>{f.name}</Text>
-                <Text className="font-semibold" style={{ color: theme?.text }}>
+                <Text style={{ color: colors.text }}>{f.name}</Text>
+                <Text className="font-semibold" style={{ color: colors?.text }}>
                   {getNoteByFolder(f.id).length}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
           {/* Theme Selector Section */}
-          {/* <View style={[styles.section, { backgroundColor: colorScheme?.secondary }]}>
-            <Text style={[styles.sectionTitle, { color: colorScheme?.text }]}>
+          <View style={[styles.section, { backgroundColor: colors.secondary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Appearance
             </Text>
 
-            <View style={styles.themeOptions}>
+            <View>
               {(["device", "light", "dark"] as const).map((mode) => (
                 <TouchableOpacity
                   key={mode}
-                  style={[
-                    styles.themeOption,
-                    {
-                      backgroundColor:
-                        themeMode === mode ? theme.primary : theme.card,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                  onPress={() => setThemeMode(mode)}
+                  onPress={() => {
+                    changeTheme(mode);
+                  }}
                 >
                   <MaterialIcons
                     name={
@@ -206,20 +199,12 @@ function Settings() {
                           : "nights-stay"
                     }
                     size={24}
-                    color={themeMode === mode ? "white" : theme.text}
                   />
-                  <Text
-                    style={[
-                      styles.themeOptionText,
-                      { color: themeMode === mode ? "white" : theme.text },
-                    ]}
-                  >
-                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                  </Text>
+                  <Text>{mode.charAt(0).toUpperCase() + mode.slice(1)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </View> */}
+          </View>
         </ScrollView>
       </View>
     </View>

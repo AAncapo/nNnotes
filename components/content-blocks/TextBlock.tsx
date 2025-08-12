@@ -4,12 +4,10 @@ import {
   NativeSyntheticEvent,
   TextInput,
   TextInputKeyPressEventData,
-  useColorScheme,
   View,
 } from "react-native";
-import { Keyboard } from "react-native";
 import { ContentBlock } from "types";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 
 interface TextBlockProps {
   block: ContentBlock;
@@ -26,7 +24,7 @@ export function TextBlock({
   onUpdate,
   onDelete,
 }: TextBlockProps) {
-  const colorScheme = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const [isEmpty, setIsEmpty] = useState<boolean>(false);
 
   const textInputRef = useRef<TextInput>(null);
@@ -53,7 +51,7 @@ export function TextBlock({
       <TextInput
         ref={textInputRef}
         className={`text-lg ${isLast && "min-h-screen"}`}
-        style={{ color: colorScheme?.text }}
+        style={{ color: colors.text }}
         multiline
         placeholder={isLast ? block.props.placeholder : ""}
         placeholderTextColor={"gray"}

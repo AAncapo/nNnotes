@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   TouchableOpacity,
   useColorScheme,
@@ -8,17 +8,19 @@ import {
   Text,
   View,
   RefreshControl,
-  Modal,
+  Alert,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { useNotesStore } from "@/store/useNotesStore";
-import { Note } from "@/types";
+import { DELETED_FOLDER_ID, Note } from "@/types";
 import { isPlatformWeb } from "@/lib/utils";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 import NoteCard from "@/components/NoteCard";
 import NoteDetails from "./note/[id]";
 import Settings from "./settings";
+import Toolbar from "@/components/Toolbar";
+import SearchBar from "@/components/SearchBar";
+import TagList from "@/components/TagList";
+import useNote from "@/hooks/useNote";
 
 enum VIEW {
   NOTES = "notes",
@@ -26,22 +28,26 @@ enum VIEW {
 }
 
 export default function Notes() {
-  const colorScheme = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const { view } = useLocalSearchParams<{
     view?: VIEW;
   }>();
   const {
     notes,
     updateNote,
-    deleteNote,
+    moveToFolder,
     getNoteByFolder,
     folders,
+    tags,
     selectedFolder,
     syncNotes,
     loading,
-  } = useNotesStore();
-  const [noteOptionsModalVisible, setNoteOptionsModalVisible] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<string | null>(null);
+  } = useNote();
+  const [toolbarVisible, setToolbarVisible] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+  const [queryValue, setQueryValue] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const folderName = useMemo(
     () =>
       !selectedFolder
@@ -51,8 +57,21 @@ export default function Notes() {
   );
 
   const filteredNotes = useMemo(() => {
-    return getNoteByFolder(selectedFolder || undefined);
-  }, [notes, selectedFolder, folders]);
+    const byFolder = getNoteByFolder(selectedFolder || undefined);
+    let fnotes = byFolder;
+
+    if (selectedTags.length > 0)
+      fnotes = fnotes.filter((n) =>
+        n.tags?.some((t) => selectedTags.includes(t))
+      );
+
+    if (queryValue !== "")
+      fnotes = fnotes.filter((n) =>
+        n.title.toLowerCase().includes(queryValue.toLowerCase())
+      );
+
+    return fnotes;
+  }, [notes, selectedFolder, folders, queryValue]);
 
   const sortedNotes = useMemo(() => {
     return [...filteredNotes].sort((a, b) => {
@@ -65,24 +84,44 @@ export default function Notes() {
     });
   }, [filteredNotes]);
 
-  // TODO: abrir modal para borrar o fijar
-  // updateNote(item.id, { isPinned: !item.isPinned }, false)
+  const handleNotePressed = (id: string) => {
+    if (selectMode) {
+      setSelectedNotes(
+        !selectedNotes.includes(id)
+          ? [...selectedNotes, id]
+          : [...selectedNotes.filter((sn) => sn !== id)]
+      );
+    } else {
+      // open note
+      isPlatformWeb
+        ? router.setParams({ id: id })
+        : router.push({
+            pathname: "/note/[id]",
+            params: { id: id },
+          });
+    }
+  };
 
-  useEffect(() => {
-    if (selectedNote) setNoteOptionsModalVisible(true);
-  }, [selectedNote]);
+  const handleNoteLongPress = (id: string) => {
+    !selectMode && setSelectMode(true);
+    setToolbarVisible(true);
+    setSelectedNotes([...selectedNotes, id]);
+  };
 
+  // TODO: use swipeable like AppleNotes (left for pin / right for folder, delete)
+  //  https://docs.swmansion.com/react-native-gesture-handler/docs/components/reanimated_swipeable
   const renderNoteCard = useCallback(
     ({ item }: { item: Note }) => {
       return (
         <NoteCard
           key={item.id}
           note={item}
-          onLongPress={(id) => setSelectedNote(id)}
+          onPress={handleNotePressed}
+          onLongPress={handleNoteLongPress}
         />
       );
     },
-    [notes]
+    [notes, selectMode, selectedNotes]
   );
 
   const onRefresh = async () => await syncNotes();
@@ -95,43 +134,63 @@ export default function Notes() {
     }
   };
 
-  const openSettings = () => {
-    if (isPlatformWeb) {
-      router.setParams({
-        view: VIEW.SETTINGS,
-      });
-    } else {
-      router.push("/settings");
-    }
+  const hideToolbar = () => {
+    setToolbarVisible(false);
+    setSelectMode(false);
+    setSelectedNotes([]);
   };
 
-  const closeOptionsModal = () => {
-    setNoteOptionsModalVisible(false);
-    setSelectedNote(null);
+  const handleDeleteNote = () => {
+    Alert.alert(
+      "Confirm delete note",
+      "Do you want to delete the selected note?",
+      [
+        { text: "Cancel" },
+        {
+          text: "Delete",
+          onPress: async () => {
+            for (const n of selectedNotes) {
+              moveToFolder(n, DELETED_FOLDER_ID);
+            }
+            hideToolbar();
+          },
+        },
+      ]
+    );
   };
 
-  console.log(`showing ${sortedNotes.length} from ${notes.length} notes...`);
+  const handleTogglePinned = async () => {
+    // updateNote(
+    //   selectedNote!,
+    //   {
+    //     isPinned: !filteredNotes.find((n) => n.id === selectedNote)!.isPinned,
+    //   },
+    //   false
+    // );
+    hideToolbar();
+  };
 
+  console.log(
+    `showing ${sortedNotes.length} from ${notes.length} notes at folder: ${selectedFolder}`
+  );
   return (
     <View
       className={`flex-1 ${isPlatformWeb && "flex-row"}`}
-      style={{ backgroundColor: colorScheme?.background }}
+      style={{ backgroundColor: colors.background }}
     >
       {/* Notes list */}
       {!view || view === VIEW.NOTES ? (
         <View
-          className={` ${isPlatformWeb ? "w-3/12" : "flex-1"}`}
-          style={{ backgroundColor: colorScheme?.background }}
+          className={` ${isPlatformWeb ? "w-3/12" : "flex-1"} relative`}
+          style={{ backgroundColor: colors.background }}
         >
-          <View className="p-2 pb-4 pt-4 gap-4">
-            <View className="flex-row items-center justify-between p-2">
+          <View className="p-2 pt-4">
+            <View className="flex-row items-center justify-between px-2">
+              {/* Folder */}
               <Text
                 className={`text-5xl font-bold`}
                 style={{
-                  color:
-                    selectedFolder !== "deleted"
-                      ? colorScheme?.text
-                      : "#ef4444",
+                  color: selectedFolder !== "deleted" ? colors.text : "#ef4444",
                 }}
               >
                 {folderName}
@@ -139,32 +198,29 @@ export default function Notes() {
               {/* Settings Button */}
               <TouchableOpacity
                 className="rounded-full p-4 items-center justify-center"
-                onPress={openSettings}
+                onPress={() => {
+                  if (isPlatformWeb) {
+                    router.setParams({
+                      view: VIEW.SETTINGS,
+                    });
+                  } else {
+                    router.push("/settings");
+                  }
+                }}
               >
                 <Ionicons
                   name="settings-outline"
                   size={20}
-                  color={colorScheme?.icons}
+                  color={colors.icon}
                 />
               </TouchableOpacity>
             </View>
 
-            {/* <SearchBar onSubmit={addNote} /> */}
-
-            {/* 
-            <View className="flex-row space-x-3">
-              {getAllTags().map((tag) => (
-                <TouchableOpacity className="bg-gray-800">
-                  <Text
-                    className="text-center"
-                    style={{ color: colorScheme?.text }}
-                  >
-                    {tag}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View> 
-            */}
+            {/* TODO: poner los tags dentro del container del searchbar (row) hacer un boton con el icono de search q onPress esconde los tags y expande la searchbar */}
+            <View className="px-2">
+              <SearchBar value={queryValue} onQueryUpdate={setQueryValue} />
+              {/* <TagList tags={tags} onSelectedChange={setSelectedTags} /> */}
+            </View>
           </View>
           <View className="flex-1">
             <FlatList
@@ -173,7 +229,7 @@ export default function Notes() {
               keyExtractor={(item) => item.id}
               alwaysBounceVertical
               keyboardShouldPersistTaps="handled"
-              contentContainerClassName={`px-4`}
+              contentContainerClassName={`px-4 pb-200`}
               refreshControl={
                 <RefreshControl refreshing={loading} onRefresh={onRefresh} />
               }
@@ -191,7 +247,7 @@ export default function Notes() {
               <TouchableOpacity
                 onPress={handleCreateNote}
                 className="p-4 rounded-lg"
-                style={{ backgroundColor: colorScheme?.button }}
+                style={{ backgroundColor: colors.button }}
               >
                 <Text
                   className="text-xl text-center font-bold"
@@ -201,6 +257,17 @@ export default function Notes() {
                 </Text>
               </TouchableOpacity>
             </View>
+          )}
+          {toolbarVisible && (
+            <Toolbar
+              key={selectedNotes.length}
+              selectedCount={selectedNotes.length || 0}
+              isPinned={false}
+              onClose={hideToolbar}
+              handleDelete={handleDeleteNote}
+              handlePin={handleTogglePinned}
+              handleTags={() => {}}
+            />
           )}
         </View>
       ) : (
@@ -214,8 +281,8 @@ export default function Notes() {
         <TouchableOpacity
           activeOpacity={0.3}
           style={{
-            backgroundColor: colorScheme?.button,
-            shadowColor: colorScheme?.button,
+            backgroundColor: colors.button,
+            shadowColor: colors.button,
             shadowOffset: {
               width: 0,
               height: 0,
@@ -227,61 +294,9 @@ export default function Notes() {
           className={`absolute bottom-16 h-20 w-20 items-center justify-center self-center rounded-full`}
           onPress={handleCreateNote}
         >
-          <Ionicons name="add" size={28} color={colorScheme?.iconButton} />
+          <Ionicons name="add" size={28} color={colors.iconButton} />
         </TouchableOpacity>
       )}
-
-      {/* NoteCard Options Modal */}
-      <Modal
-        visible={noteOptionsModalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeOptionsModal}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="w-[90%] bg-white rounded-xl p-4">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-semibold">Note Options</Text>
-              <TouchableOpacity
-                onPress={() => setNoteOptionsModalVisible(false)}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="space-y-4">
-              <TouchableOpacity
-                onPress={async () => {
-                  updateNote(
-                    selectedNote!,
-                    {
-                      isPinned: !filteredNotes.find(
-                        (n) => n.id === selectedNote
-                      )!.isPinned,
-                    },
-                    false
-                  );
-                  closeOptionsModal();
-                }}
-              >
-                <Text>
-                  {filteredNotes.find((n) => n.id === selectedNote)?.isPinned
-                    ? "Unpin Note"
-                    : "Pin Note"}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={async () => {
-                  deleteNote(selectedNote!);
-                  closeOptionsModal();
-                }}
-              >
-                <Text>Delete Note</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

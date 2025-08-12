@@ -1,20 +1,19 @@
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 import "../global.css";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Layout() {
-  const colorScheme = useTheme(useColorScheme());
+  const { colors, theme } = useTheme();
   const { top, bottom } = useSafeAreaInsets();
 
   return (
     <>
       <StatusBar
-        style={useColorScheme() === "dark" ? "light" : "dark"}
-        backgroundColor={colorScheme?.background}
+        style={theme === "dark" ? "light" : "dark"}
+        backgroundColor={colors.background}
       />
       <Stack
         screenOptions={{
@@ -26,14 +25,14 @@ export default function Layout() {
             marginBottom: bottom,
           },
           headerShown: false,
-          navigationBarColor: colorScheme?.background,
+          navigationBarColor: colors.background,
         }}
       >
         <Stack.Screen
           name="note/[id]"
           options={{
             freezeOnBlur: true,
-            navigationBarColor: colorScheme?.secondary,
+            navigationBarColor: colors.secondary,
           }}
         />
         <Stack.Screen
@@ -52,7 +51,7 @@ export default function Layout() {
           name="(auth)"
           options={{
             freezeOnBlur: true,
-            navigationBarColor: colorScheme?.secondary,
+            navigationBarColor: colors.secondary,
           }}
         />
       </Stack>

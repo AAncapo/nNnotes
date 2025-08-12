@@ -13,10 +13,10 @@ import { router } from "expo-router";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { AuthInput } from "@/components/AuthInput";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 
 export default function SignUp() {
-  const theme = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -45,12 +45,12 @@ export default function SignUp() {
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        { backgroundColor: theme?.background },
+        { backgroundColor: colors.background },
       ]}
     >
       <View style={styles.content}>
-        <Text style={[styles.title, { color: theme?.text }]}>Crear cuenta</Text>
-        <Text style={[styles.subtitle, { color: theme?.text }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Crear cuenta</Text>
+        <Text style={[styles.subtitle, { color: colors.text }]}>
           Regístrate para empezar a usar nNnotes
         </Text>
 
@@ -83,7 +83,7 @@ export default function SignUp() {
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: theme?.button }]}
+          style={[styles.submitButton, { backgroundColor: colors.button }]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
@@ -91,7 +91,7 @@ export default function SignUp() {
             <ActivityIndicator color="gray" />
           ) : (
             <Text
-              style={[styles.submitButtonText, { color: theme?.buttonText }]}
+              style={[styles.submitButtonText, { color: colors.buttonText }]}
             >
               Regístrate
             </Text>
@@ -102,7 +102,7 @@ export default function SignUp() {
           className="mt-16 items-center"
           onPress={() => router.back()}
         >
-          <Text style={[styles.switchButtonText, { color: theme?.text }]}>
+          <Text style={[styles.switchButtonText, { color: colors.text }]}>
             Ya tienes una cuenta? {"  "}
             <Text className="underline">Inicia sesión</Text>
           </Text>

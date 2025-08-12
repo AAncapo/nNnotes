@@ -1,7 +1,12 @@
+export type ColorTheme = "light" | "dark";
+
 export enum SUPABASE_BUCKET {
   IMAGES = "images",
   AUDIOS = "audios",
 }
+
+export const DELETED_FOLDER_ID = "deleted";
+export const PROTECTED_FOLDER_ID = "protected";
 
 export enum ContentType {
   TEXT = "text",
@@ -52,4 +57,9 @@ export type ChecklistItem = {
 export interface NotesFolder {
   id: string;
   name: string;
+}
+
+export interface NoteTag {
+  name: string;
+  color?: string;
 }

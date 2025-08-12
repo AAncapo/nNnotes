@@ -9,14 +9,12 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ContentBlock, ContentType } from "@/types";
 import { convertAndFormatUTC, isPlatformWeb } from "@/lib/utils";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 import useNote from "@/hooks/useNote";
 import NoteHeader from "@/components/NoteHeader";
-import NoteToolbar from "@/components/NoteToolbar";
 import BlockOptionsModal from "@/components/BlockOptionsModal";
 import { AudioRecordingModal } from "@/components/AudioRecordingModal";
 import { ChecklistBlock } from "@/components/content-blocks/ChecklistBlock";
@@ -25,7 +23,7 @@ import { TextBlock } from "@/components/content-blocks/TextBlock";
 import ImagesContainer from "@/components/ImagesContainer";
 
 export default function NoteDetails() {
-  const colorScheme = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const {
     title,
@@ -210,13 +208,11 @@ export default function NoteDetails() {
   }
 
   return (
-    <View
-      className={`flex-1`}
-      style={{ backgroundColor: colorScheme?.secondary }}
-    >
+    <View className={`flex-1`} style={{ backgroundColor: colors.secondary }}>
       {/* Header */}
       <NoteHeader
         title={title}
+        onAddContentBlock={onToolbarOptionSelected}
         updateTitle={handleUpdateTitle}
         submitTitle={handleTitleSubmit}
       />
@@ -241,7 +237,7 @@ export default function NoteDetails() {
             createdAt && (
               <Text
                 className="text-center text-xs opacity-50"
-                style={{ color: colorScheme!.text }}
+                style={{ color: colors.text }}
               >
                 Creado {convertAndFormatUTC(createdAt)}
               </Text>
@@ -255,12 +251,12 @@ export default function NoteDetails() {
         />
       </KeyboardAvoidingView>
       {/* Toolbar */}
-      <View className="items-center">
+      {/* <View className="items-center">
         <NoteToolbar
           onAddContentBlock={onToolbarOptionSelected}
           onSave={() => handleSave(true)}
         />
-      </View>
+      </View> */}
 
       {/* Modals */}
       <AudioRecordingModal

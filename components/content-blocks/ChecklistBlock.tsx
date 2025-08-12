@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
-import useTheme from "@/lib/themes";
-import { useCallback, useMemo, useState } from "react";
-import { View, TextInput, useColorScheme } from "react-native";
+import useTheme from "@/hooks/useTheme";
+import { useCallback, useMemo } from "react";
+import { View } from "react-native";
 import { ChecklistItem, ContentBlock } from "types";
 import ListItem from "./ListItem";
 
@@ -11,7 +11,7 @@ interface ChecklistBlockProps {
 }
 
 export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
-  const _colors = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const { items, title } = block.props;
 
   const uncheckedItems = useMemo(() => {
@@ -31,7 +31,7 @@ export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
           index={index}
           item={item}
           addItem={addItem}
-          colorScheme={_colors}
+          colorScheme={colors}
           onItemChangeText={onItemChangeText}
           removeItem={removeItem}
           onItemCheck={onItemCheck}
@@ -121,7 +121,7 @@ export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
       )}
       <View
         className={`h-[1px] w-5/6 self-center rounded-full opacity-10 my-1`}
-        style={{ backgroundColor: _colors?.separator }}
+        style={{ backgroundColor: colors.separator }}
       />
       {checkedItems.map((item, index) => renderChecklistItem({ item, index }))}
     </View>

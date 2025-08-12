@@ -2,17 +2,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import { useState, useEffect } from "react";
-import {
-  View,
-  TouchableOpacity,
-  Text,
-  useColorScheme,
-  Alert,
-} from "react-native";
+import { View, TouchableOpacity, Text, Alert } from "react-native";
 
 import { ContentBlock } from "@/types";
 import { convertAndFormatUTC } from "@/lib/utils";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 
 interface AudioBlockProps {
   block: ContentBlock;
@@ -29,7 +23,7 @@ export function AudioBlock({
   playbackEnd,
   openOptions,
 }: AudioBlockProps) {
-  const colorScheme = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const [sound, setSound] = useState<Audio.Sound>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -139,7 +133,7 @@ export function AudioBlock({
             <Ionicons
               name="ellipsis-horizontal-sharp"
               size={18}
-              color={colorScheme?.iconButton}
+              color={colors.iconButton}
             />
           </TouchableOpacity>
         </View>
@@ -149,7 +143,7 @@ export function AudioBlock({
           <Ionicons
             name={isPlaying ? "pause-circle-sharp" : "play-circle-sharp"}
             size={32}
-            color={colorScheme?.iconButton}
+            color={colors.iconButton}
           />
         </TouchableOpacity>
 

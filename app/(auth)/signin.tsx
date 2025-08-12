@@ -6,15 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import { AuthInput } from "@/components/AuthInput";
 import { useAuthStore } from "@/store/useAuthStore";
-import useTheme from "@/lib/themes";
+import useTheme from "@/hooks/useTheme";
 
 export default function Auth() {
-  const theme = useTheme(useColorScheme());
+  const { colors } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, signIn, isLoading, error } = useAuthStore();
@@ -33,15 +32,15 @@ export default function Auth() {
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        { backgroundColor: theme?.background },
+        { backgroundColor: colors.background },
       ]}
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.content}>
-        <Text style={[styles.title, { color: theme?.text }]}>
+        <Text style={[styles.title, { color: colors.text }]}>
           Bienvenido a nNnotes
         </Text>
-        <Text style={[styles.subtitle, { color: theme?.text }]}>
+        <Text style={[styles.subtitle, { color: colors.text }]}>
           Inicia sesión para continuar o regístrate
         </Text>
 
@@ -65,7 +64,7 @@ export default function Auth() {
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: theme?.button }]}
+          style={[styles.submitButton, { backgroundColor: colors.button }]}
           onPress={handleSubmit}
           disabled={isLoading}
         >
@@ -73,7 +72,7 @@ export default function Auth() {
             <ActivityIndicator color="gray" />
           ) : (
             <Text
-              style={[styles.submitButtonText, { color: theme?.buttonText }]}
+              style={[styles.submitButtonText, { color: colors.buttonText }]}
             >
               Iniciar sesión
             </Text>
@@ -84,7 +83,7 @@ export default function Auth() {
           style={styles.switchButton}
           onPress={() => router.push("/signup")}
         >
-          <Text style={[styles.switchButtonText, { color: theme?.text }]}>
+          <Text style={[styles.switchButtonText, { color: colors.text }]}>
             No tienes una cuenta? {"  "}
             <Text className="underline">Regístrate</Text>
           </Text>
