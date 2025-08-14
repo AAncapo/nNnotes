@@ -3,7 +3,9 @@ import { supabase } from "./supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 import { SUPABASE_BUCKET } from "@/types";
 
-// filename: userId + blockId + filename
+// filename: noteId + filename
+export const getFilename = (noteId: string, assetUri: string) =>
+  `${noteId}+${assetUri.split("/").pop()}`;
 
 // Takes a file saved in cache and try to upload to supabase storage
 export const uploadFile = async (filename: string, bucket: SUPABASE_BUCKET) => {
@@ -12,8 +14,9 @@ export const uploadFile = async (filename: string, bucket: SUPABASE_BUCKET) => {
 
   try {
     const exists = await checkFileInCache(filename, bucket);
-    if (!exists)
-      throw new Error(`File ${filename.split("+").pop()} not found in cache`);
+    if (!exists) return;
+    // TODO: handle este caso, el user puede perder el archivo antes de subirlo
+    // throw new Error(`File ${filename.split("+").pop()} not found in cache`);
 
     // Read the file as base64
     const base64Data = await FileSystem.readAsStringAsync(cachePath, {
@@ -49,11 +52,55 @@ export const uploadFile = async (filename: string, bucket: SUPABASE_BUCKET) => {
 
     if (uploadError)
       throw new Error(
-        `Error subiendo imagen al servidor. ${uploadError.name}. ${uploadError.message}`
+        `Error uploading file. ${uploadError.name}. ${uploadError.message}`
       );
   } catch (error: any) {
     throw new Error(error.message);
   }
+};
+
+export const downloadFile = async (
+  filename: string,
+  bucket: SUPABASE_BUCKET
+): Promise<string | null> => {
+  const filePath = await getSupabasePath(filename);
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .download(filePath);
+
+  if (error) throw new Error(error.message);
+
+  const reader = new FileReader();
+  reader.readAsDataURL(data);
+
+  return new Promise((resolve, reject) => {
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result as string;
+        const base64Data = base64.split(",")[1] as string;
+
+        const dirInfo = await FileSystem.getInfoAsync(getCacheDirectory());
+        if (!dirInfo.exists || !dirInfo.isDirectory) {
+          const dir = getCacheDirectory();
+          await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+        }
+
+        const cacheDir = `${getCacheDirectory()}${filename}`;
+
+        await FileSystem.writeAsStringAsync(cacheDir, base64Data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        resolve(cacheDir);
+      } catch (error) {
+        console.error("Error saving file:", error);
+        reject(error);
+      }
+    };
+    reader.onerror = (error) => {
+      console.error("FileReader error:", error);
+      reject(error);
+    };
+  });
 };
 
 // Seach for a file in cache and in supabase storage bucket
@@ -62,42 +109,12 @@ export const getFile = async (
   bucket: SUPABASE_BUCKET
 ): Promise<string | null> => {
   try {
-    const cacheDir = getCachePath(filename, bucket);
-
     // Check if image is already in cache
     const isCached = await checkFileInCache(filename, bucket);
-    if (isCached) return cacheDir;
+    if (isCached) return getCachePath(filename, bucket);
 
     // If not in cache, try to download from Supabase
-    const filePath = await getSupabasePath(filename);
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .download(filePath);
-
-    if (error) throw new Error(error.message);
-
-    const reader = new FileReader();
-    reader.readAsDataURL(data);
-
-    return new Promise((resolve, reject) => {
-      reader.onload = async () => {
-        try {
-          const base64 = reader.result as string;
-          const base64Data = base64.split(",")[1] as string;
-          await FileSystem.writeAsStringAsync(cacheDir, base64Data, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          resolve(cacheDir);
-        } catch (error) {
-          console.error("Error saving file:", error);
-          reject(error);
-        }
-      };
-      reader.onerror = (error) => {
-        console.error("FileReader error:", error);
-        reject(error);
-      };
-    });
+    return await downloadFile(filename, bucket);
   } catch (error) {
     console.error("Error downloading and caching file:", error);
     return null;
@@ -139,9 +156,12 @@ export const saveFileToCache = async (
 };
 
 // Helpers
-export const getCachePath = (filename: string, bucket: SUPABASE_BUCKET) =>
-  `${FileSystem.cacheDirectory}${bucket}/${filename}`;
+export const getCachePath = (filename: string, bucket?: SUPABASE_BUCKET) =>
+  `${FileSystem.cacheDirectory}files/${filename}`;
 
+export const getCacheDirectory = () => `${FileSystem.cacheDirectory}files/`;
+
+// old cachePath: `${FileSystem.cacheDirectory}${bucket}/${filename}`;
 export const getSupabasePath = async (filename: string) => {
   const user = await useAuthStore.getState().getUser();
   if (!user)

@@ -10,15 +10,15 @@ import {
   Alert,
 } from "react-native";
 
-import { DELETED_FOLDER_ID, Note } from "@/types";
+import { Note } from "@/types";
 import { isPlatformWeb } from "@/lib/utils";
 import useTheme from "@/hooks/useTheme";
-import NoteCard from "@/components/NoteCard";
 import NoteDetails from "./note/[id]";
 import Settings from "./settings";
+import NoteCard from "@/components/NoteCard";
 import Toolbar from "@/components/Toolbar";
 import SearchBar from "@/components/common/SearchBar";
-import useNote from "@/hooks/useNote";
+import { useNotesStore } from "@/store/useNotesStore";
 
 enum VIEW {
   NOTES = "notes",
@@ -33,6 +33,7 @@ export default function Notes() {
   const {
     notes,
     updateNote,
+    deleteNote,
     moveToFolder,
     getNoteByFolder,
     folders,
@@ -40,10 +41,9 @@ export default function Notes() {
     selectedFolder,
     syncNotes,
     loading,
-  } = useNote();
+  } = useNotesStore();
   const [toolbarVisible, setToolbarVisible] = useState(false);
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+  const [selectedNote, setSelectedNote] = useState<string | undefined>();
   const [queryValue, setQueryValue] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const folderName = useMemo(
@@ -72,6 +72,9 @@ export default function Notes() {
   }, [notes, selectedFolder, folders, queryValue]);
 
   const sortedNotes = useMemo(() => {
+    console.log(
+      `showing ${filteredNotes.length} from ${notes.length} notes at folder: ${selectedFolder}`
+    );
     return [...filteredNotes].sort((a, b) => {
       // Pinned notes come first
       if (a.isPinned && !b.isPinned) return -1;
@@ -83,27 +86,18 @@ export default function Notes() {
   }, [filteredNotes]);
 
   const handleNotePressed = (id: string) => {
-    if (selectMode) {
-      setSelectedNotes(
-        !selectedNotes.includes(id)
-          ? [...selectedNotes, id]
-          : [...selectedNotes.filter((sn) => sn !== id)]
-      );
-    } else {
-      // open note
-      isPlatformWeb
-        ? router.setParams({ id: id })
-        : router.push({
-            pathname: "/note/[id]",
-            params: { id: id },
-          });
-    }
+    // open note
+    isPlatformWeb
+      ? router.setParams({ id: id })
+      : router.push({
+          pathname: "/note/[id]",
+          params: { id: id },
+        });
   };
 
   const handleNoteLongPress = (id: string) => {
-    !selectMode && setSelectMode(true);
     setToolbarVisible(true);
-    setSelectedNotes([...selectedNotes, id]);
+    setSelectedNote(id);
   };
 
   // TODO: use swipeable like AppleNotes (left for pin / right for folder, delete)
@@ -119,7 +113,7 @@ export default function Notes() {
         />
       );
     },
-    [notes, selectMode, selectedNotes]
+    [notes]
   );
 
   const onRefresh = async () => await syncNotes();
@@ -134,11 +128,12 @@ export default function Notes() {
 
   const hideToolbar = () => {
     setToolbarVisible(false);
-    setSelectMode(false);
-    setSelectedNotes([]);
+    setSelectedNote(undefined);
   };
 
   const handleDeleteNote = () => {
+    if (!selectedNote) return;
+
     Alert.alert(
       "Confirm delete note",
       "Do you want to delete the selected note?",
@@ -147,9 +142,8 @@ export default function Notes() {
         {
           text: "Delete",
           onPress: async () => {
-            for (const n of selectedNotes) {
-              moveToFolder(n, DELETED_FOLDER_ID);
-            }
+            await deleteNote(selectedNote);
+            // moveToFolder(selectedNote, DELETED_FOLDER_ID);
             hideToolbar();
           },
         },
@@ -158,19 +152,19 @@ export default function Notes() {
   };
 
   const handleTogglePinned = async () => {
-    // updateNote(
-    //   selectedNote!,
-    //   {
-    //     isPinned: !filteredNotes.find((n) => n.id === selectedNote)!.isPinned,
-    //   },
-    //   false
-    // );
+    if (!selectedNote) return;
+
+    updateNote(
+      selectedNote!,
+      {
+        isPinned: !filteredNotes.find((n) => n.id === selectedNote)!.isPinned,
+      },
+      false
+    );
     hideToolbar();
   };
 
-  console.log(
-    `showing ${sortedNotes.length} from ${notes.length} notes at folder: ${selectedFolder}`
-  );
+  console.log(isPlatformWeb);
   return (
     <View
       className={`flex-1 ${isPlatformWeb && "flex-row"}`}
@@ -182,7 +176,7 @@ export default function Notes() {
           className={` ${isPlatformWeb ? "w-3/12" : "flex-1"} relative`}
           style={{ backgroundColor: colors.background }}
         >
-          <View className="p-2 pt-4">
+          <View className="p-2 pt-4 gap-2">
             <View className="flex-row items-center justify-between px-2">
               {/* Folder */}
               <Text
@@ -256,11 +250,15 @@ export default function Notes() {
               </TouchableOpacity>
             </View>
           )}
+          {/* Toolbar */}
           {toolbarVisible && (
             <Toolbar
-              key={selectedNotes.length}
-              selectedCount={selectedNotes.length || 0}
-              isPinned={false}
+              key={selectedNote}
+              isPinned={
+                selectedNote
+                  ? notes.find((n) => n.id === selectedNote)?.isPinned || false
+                  : false
+              }
               onClose={hideToolbar}
               handleDelete={handleDeleteNote}
               handlePin={handleTogglePinned}

@@ -7,10 +7,16 @@ import {
   BlockProps,
   ContentBlock,
   ContentType,
-  DELETED_FOLDER_ID,
-  PROTECTED_FOLDER_ID,
+  Note,
+  SUPABASE_BUCKET,
 } from "@/types";
-import { getDateISOString, getRandomID, isPlatformWeb } from "@/lib/utils";
+import {
+  getDateISOString,
+  getNewNoteID,
+  getRandomID,
+  isPlatformWeb,
+} from "@/lib/utils";
+import { getFilename, saveFileToCache } from "@/lib/supabase-storage";
 
 const textPlaceholder = "Start writing ...";
 
@@ -21,39 +27,40 @@ function useNote(id?: string) {
     getNote,
     addNote,
     updateNote,
+    deleteNote,
     folders,
-    setFolders,
     tags,
     setTags,
-    setNotes,
     selectedFolder,
     syncNotes,
     loading,
   } = useNotesStore();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState<ContentBlock[]>([]);
+  const [note, setNote] = useState<Note | null>(null);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
-  const [createdAt, setCreatedAt] = useState("");
 
   useEffect(() => {
     if (!isNewNote) {
       const existingNote = getNote(id);
 
       if (existingNote) {
-        setCreatedAt(existingNote.createdAt);
-        setTitle(existingNote.title);
-        setContent(existingNote.content);
+        setNote(existingNote);
       }
     } else {
-      if (content.length === 0) {
-        addNewContentBlock(ContentType.TEXT, [
+      setNote({
+        id: getNewNoteID(),
+        title: "",
+        folder: undefined,
+        content: [
           {
-            text: "",
-            placeholder: textPlaceholder,
-            focus: false,
+            type: ContentType.TEXT,
+            id: getRandomID(),
+            updatedAt: getDateISOString(),
+            props: { text: "", placeholder: textPlaceholder, focus: false },
           },
-        ]);
-      }
+        ],
+        updatedAt: getDateISOString(),
+        createdAt: getDateISOString(),
+      });
     }
   }, [isNewNote, id]);
 
@@ -66,6 +73,9 @@ function useNote(id?: string) {
   };
 
   const handleSave = async (goBack?: boolean) => {
+    if (!note) return;
+    const { title, content } = note;
+
     // Descartar nota vacia
     const isBlank =
       !title.length && content.length === 1 && !content[0].props.text;
@@ -81,9 +91,9 @@ function useNote(id?: string) {
     }
 
     if (!isNewNote) {
-      await updateNote(id as string, { title, content });
+      await updateNote(id, { title, content });
     } else {
-      await addNote({ title, content });
+      await addNote(note);
     }
     goBack && handleGoBack();
   };
@@ -92,6 +102,8 @@ function useNote(id?: string) {
     type: ContentType,
     props: Partial<BlockProps>[]
   ) => {
+    if (!note) return;
+
     let newBlocks: ContentBlock[] = [];
     switch (type) {
       case ContentType.TEXT:
@@ -150,7 +162,7 @@ function useNote(id?: string) {
         break;
     }
 
-    let newContent: ContentBlock[] = [...content];
+    let newContent: ContentBlock[] = [...note.content];
 
     // Borra último block (anterior al nuevo) si es texto vacío
     if (newContent.length > 0) {
@@ -178,43 +190,72 @@ function useNote(id?: string) {
           },
         });
       }
-      setContent([...newContent]);
+      setNote({ ...note, content: [...newContent] });
     }
 
     if (!hasChanges) setHasChanges(true);
   };
 
   const handlePickImage = async () => {
+    if (!note) return;
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.9,
+      quality: 0.8,
       allowsMultipleSelection: true,
     });
 
     if (!result.canceled) {
-      addNewContentBlock(
-        ContentType.IMAGE,
-        result.assets.map((asset) => {
-          return {
-            text: "Image",
-            uri: asset.uri,
-          };
-        })
-      );
+      const promises = result.assets.map((asset) => {
+        const filename = getFilename(note.id, asset.uri);
+        return saveFileToCache(asset.uri, filename, SUPABASE_BUCKET.IMAGES);
+      });
+
+      Promise.all(promises).then((results) => {
+        addNewContentBlock(
+          ContentType.IMAGE,
+          results.map((cachePath) => {
+            return {
+              text: "Image",
+              filename: getFilename(note.id, cachePath!),
+              uri: cachePath!,
+            };
+          })
+        );
+      });
     }
   };
 
+  const handleSaveRecording = async (props: Partial<BlockProps>) => {
+    if (!note || !props.uri) return;
+
+    const filename = getFilename(note.id, props.uri);
+    const cachePath = await saveFileToCache(
+      props.uri,
+      filename,
+      SUPABASE_BUCKET.AUDIOS
+    );
+
+    if (cachePath)
+      addNewContentBlock(ContentType.AUDIO, [{ ...props, uri: cachePath }]);
+  };
+
   const handleUpdateBlock = (updatedBlock: ContentBlock) => {
+    if (!note) return;
+    const { content } = note;
     const newContent = content.map((block) =>
       block.id === updatedBlock.id
         ? { ...updatedBlock, updatedAt: getDateISOString() }
         : block
     );
-    setContent(newContent);
+    setNote({ ...note, content: [...newContent] });
     if (!hasChanges) setHasChanges(true);
   };
 
   const handleDeleteBlock = (blockId: string) => {
+    if (!note) return;
+    const { content } = note;
+
     const deleteIndex = content.findIndex((b) => b.id === blockId);
     if (deleteIndex === -1) return;
 
@@ -258,85 +299,41 @@ function useNote(id?: string) {
       ];
     }
 
-    setContent(newContent);
+    setNote({ ...note, content: [...newContent] });
     if (!hasChanges) setHasChanges(true);
   };
 
   const handleUpdateTitle = (newTitle: string) => {
+    if (!note) return;
+    const { title } = note;
+
     if (title === newTitle) return;
-    setTitle(newTitle);
+    setNote({ ...note, title: newTitle });
     if (!hasChanges) setHasChanges(true);
   };
 
   const handleTitleSubmit = () => {
+    if (!note) return;
+    const { content } = note;
     // Create text block if content is empty
     const defaultBlock =
       content.length === 1 && content[0].type === ContentType.TEXT
         ? content[0]
         : null;
     if (defaultBlock && defaultBlock.props.text === "") {
-      setContent([
-        { ...defaultBlock, props: { ...defaultBlock.props, focus: true } },
-      ]);
+      setNote({
+        ...note,
+        content: [
+          { ...defaultBlock, props: { ...defaultBlock.props, focus: true } },
+        ],
+      });
     }
   };
 
-  // Folder & tags handling ...
-  const selectFolder = (selectedFolder?: string) => {
-    useNotesStore.setState({ selectedFolder });
-  };
-
-  const getNoteByFolder = (folderId?: string) => {
-    // by default returns all except deleted, protected and notes without folder defined or existent
-    return notes.filter((n) =>
-      folderId
-        ? n.folder === folderId
-        : (n.folder !== DELETED_FOLDER_ID &&
-            n.folder !== PROTECTED_FOLDER_ID) ||
-          !n.folder
-    );
-  };
-
-  const addFolder = async (name: string) => {
-    const updatedFolders = [...folders, { id: getRandomID(), name }];
-    setFolders(updatedFolders);
-  };
-
-  const updateFolder = async (id: string, propName: string, value: any) => {};
-
-  const deleteFolder = async (id: string) => {
-    if (id === DELETED_FOLDER_ID || id === PROTECTED_FOLDER_ID) return;
-
-    const updatedFolders = [...folders.filter((f) => f.id !== id)];
-    setNotes([
-      ...notes.map((n) => ({
-        ...n,
-        folder: n.folder === id ? undefined : n.folder,
-      })),
-    ]);
-
-    setFolders(updatedFolders);
-  };
-
-  const moveToFolder = async (noteId: string, folder: string | undefined) => {
-    // undefined is meant for notes without folder
-    await useNotesStore.getState().setNotes([
-      ...useNotesStore.getState().notes.map((n) =>
-        n.id === noteId
-          ? {
-              ...n,
-              folder,
-              updatedAt:
-                folder === DELETED_FOLDER_ID ? getDateISOString() : n.updatedAt,
-            }
-          : n
-      ),
-    ]);
-  };
-
   return {
-    title,
-    content,
+    title: note?.title || "",
+    content: note?.content || [],
+    createdAt: note?.createdAt,
     hasChanges,
     handleGoBack,
     handleSave,
@@ -346,18 +343,13 @@ function useNote(id?: string) {
     handleTitleSubmit,
     handleDeleteBlock,
     handlePickImage,
-    createdAt,
+    handleSaveRecording,
     notes,
-    getNoteByFolder,
-    moveToFolder,
-    selectFolder,
-    addFolder,
-    updateFolder,
-    deleteFolder,
     selectedFolder,
     syncNotes,
     loading,
     updateNote,
+    deleteNote,
     folders,
     tags,
   };

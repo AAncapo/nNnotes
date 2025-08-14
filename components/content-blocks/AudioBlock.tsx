@@ -7,6 +7,7 @@ import { View, TouchableOpacity, Text, Alert } from "react-native";
 import { ContentBlock } from "@/types";
 import { convertAndFormatUTC } from "@/lib/utils";
 import useTheme from "@/hooks/useTheme";
+import { getCachePath } from "@/lib/supabase-storage";
 
 interface AudioBlockProps {
   block: ContentBlock;
@@ -50,7 +51,8 @@ export function AudioBlock({
   }, [audioPlaying]);
 
   const playSound = async () => {
-    if (!block.props.uri) return;
+    const uri = getCachePath(block.props.filename || "");
+    if (!uri) return;
 
     // Only calls playbackStart if its neither playing or should play
     if (!isPlaying && audioPlaying !== block.id) {
@@ -65,7 +67,7 @@ export function AudioBlock({
         setIsPlaying(!isPlaying);
       } else {
         const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: block.props.uri },
+          { uri },
           { shouldPlay: true, rate: playRate }
         );
         setSound(newSound);

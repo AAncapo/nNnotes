@@ -12,11 +12,11 @@ import { router } from "expo-router";
 import { Picker as SelectPicker } from "@react-native-picker/picker";
 
 import { Back } from "@/components/common/Icons";
-import useNote from "@/hooks/useNote";
 import useTheme from "@/hooks/useTheme";
 import { isPlatformWeb } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ColorTheme } from "@/types";
+import { useNotesStore } from "@/store/useNotesStore";
 
 export const themeOptions = ["device", "light", "dark"];
 
@@ -24,7 +24,7 @@ function Settings() {
   const { theme, colors, changeTheme } = useTheme();
   const { user, signOut } = useAuthStore();
   const { folders, selectFolder, getNoteByFolder, syncNotes, loading } =
-    useNote();
+    useNotesStore();
 
   const handleSelectFolder = (folderId: string | null) => {
     selectFolder(folderId || undefined);

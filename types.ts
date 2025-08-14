@@ -22,6 +22,7 @@ export interface Note {
   tags?: string[];
   folder?: string;
   isPinned?: boolean;
+  isDeleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }

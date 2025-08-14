@@ -1,7 +1,11 @@
+import usePreferencesStore from "@/store/usePreferencesStore";
 import { Audio } from "expo-av";
 import { useEffect, useState } from "react";
 
 export default function useRecorder() {
+  const recordingQuality = usePreferencesStore(
+    (state) => state.recordingQuality
+  );
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -29,7 +33,9 @@ export default function useRecorder() {
   const startRecording = async () => {
     try {
       const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+        recordingQuality === "low"
+          ? Audio.RecordingOptionsPresets.LOW_QUALITY
+          : Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
       setRecording(recording);
       setIsRecording(true);

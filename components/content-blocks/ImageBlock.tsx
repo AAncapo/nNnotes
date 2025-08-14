@@ -1,4 +1,9 @@
-import { checkFileInCache, getFile } from "@/lib/supabase-storage";
+import {
+  checkFileInCache,
+  downloadFile,
+  getCachePath,
+  getFile,
+} from "@/lib/supabase-storage";
 import { Octicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -36,17 +41,22 @@ export function ImageBlock({
   onSelected,
 }: ImageBlockProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [uri, setUri] = useState<string | null>(block.props.uri || null);
+  const [uri, setUri] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //   if (!block.props.filename) return;
+  useEffect(() => {
+    if (!block.props.filename) return;
 
-  //   checkFileInCache(block.props.filename, SUPABASE_BUCKET.IMAGES).then(
-  //     (res) => {
-  //       if (res) setUri(res ? block.props.uri || "" : null);
-  //     }
-  //   );
-  // }, []);
+    checkFileInCache(block.props.filename, SUPABASE_BUCKET.IMAGES).then(
+      (res) => {
+        if (res)
+          setUri(
+            res
+              ? getCachePath(block.props.filename || "", SUPABASE_BUCKET.IMAGES)
+              : null
+          );
+      }
+    );
+  }, []);
 
   const onDownload = async () => {
     try {
@@ -56,7 +66,7 @@ export function ImageBlock({
           "Image doesn't have a filename assigned. It cannot be downloaded"
         );
 
-      const cachePath = await getFile(
+      const cachePath = await downloadFile(
         block.props.filename,
         SUPABASE_BUCKET.IMAGES
       );
@@ -98,7 +108,7 @@ export function ImageBlock({
                 style={styles.wrapperTouchable}
                 onPress={onDownload}
               >
-                <Octicons name="download" size={24} color="white" />
+                <Octicons name="download" size={28} color="white" />
               </TouchableOpacity>
             )}
           </View>

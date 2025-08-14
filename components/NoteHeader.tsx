@@ -25,10 +25,11 @@ function NoteHeader({
         style={theme === "dark" ? "light" : "dark"}
         backgroundColor={colors.secondary}
       />
-      <View className={`flex-row items-center justify-between px-4 py-1`}>
+      <View className={`flex-row items-center justify-around px-4 py-1`}>
+        <View className=""></View>
         {/* Title */}
         <TextInput
-          className={`mx-4 flex-1 text-start text-xl font-semibold`}
+          className={`text-center text-xl font-semibold`}
           style={{ color: colors.text }}
           defaultValue={title}
           onChangeText={updateTitle}
@@ -38,7 +39,7 @@ function NoteHeader({
           numberOfLines={1}
         />
         <View
-          className={`flex-row justify-between items-center`}
+          className={`flex-row items-center`}
           style={{ backgroundColor: colors.secondary }}
         >
           {/* <ToolBarButton

@@ -45,7 +45,7 @@ function NoteCard({ note, onPress, onLongPress }: NoteCardProps) {
 
   return (
     <TouchableOpacity
-      className={`py-2 ${theme === "dark" ? "border-gray-800" : "border-gray-200"} border-b`}
+      className={`py-${isPinned ? "1" : "2"} ${theme === "dark" ? "border-gray-800" : "border-gray-200"} border-b`}
       style={{
         borderColor: colors.separator,
       }}
@@ -70,14 +70,14 @@ function NoteCard({ note, onPress, onLongPress }: NoteCardProps) {
       </View>
       {/* Subtitle */}
       <Text
-        className={`max-h-16 text-sm ${useColorScheme() === "dark" ? "text-gray-400" : "text-gray-500"} flex text-ellipsis line-clamp-${isPinned ? 1 : 2} overflow-hidden`}
+        className={`max-h-16 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"} flex text-ellipsis line-clamp-${isPinned ? 1 : 2} overflow-hidden`}
       >
         {renderSubtitle}
       </Text>
       {/* UpdatedAt */}
       <View className="flex-row justify-between">
         <Text
-          className={`py-1 pt-2 text-xs ${useColorScheme() === "dark" ? "text-gray-500" : "text-gray-400"} line-clamp-1 overflow-clip`}
+          className={`py-1 text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"} line-clamp-1 overflow-clip`}
         >
           {parsedUpdatedAt}
         </Text>

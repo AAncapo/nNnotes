@@ -6,7 +6,6 @@ import { isPlatformWeb } from "@/lib/utils";
 import { Close, Delete, Pin, PinOff, Tags } from "./common/Icons";
 
 interface ToolbarProps {
-  selectedCount: number;
   isPinned: boolean;
   handleDelete: () => void;
   handlePin: () => void;
@@ -15,7 +14,6 @@ interface ToolbarProps {
 }
 
 function Toolbar({
-  selectedCount,
   isPinned,
   handleDelete,
   handlePin,
@@ -28,25 +26,22 @@ function Toolbar({
       className={`flex-row w-full h-16 px-4 items-center justify-around absolute bottom-0`}
       style={{ backgroundColor: isPlatformWeb ? "" : colors.background }}
     >
-      <Text className="flex-1 text-lg">{selectedCount} selected</Text>
-      <View className="flex-row">
-        <ToolBarButton onPressed={handleDelete}>
-          {/* <Ionicons name="mic" size={22} color={colorScheme?.icons} /> */}
-          <Delete />
-        </ToolBarButton>
-        <ToolBarButton onPressed={handlePin}>
-          {/* <Ionicons name="image" size={24} color={colorScheme?.icons} /> */}
-          {isPinned ? <Pin /> : <PinOff />}
-        </ToolBarButton>
-        <ToolBarButton onPressed={handleTags}>
-          {/* <Ionicons name="image" size={24} color={colorScheme?.icons} /> */}
-          <Tags />
-        </ToolBarButton>
-        <ToolBarButton onPressed={onClose}>
-          <Close />
-          {/* <Ionicons name="image" size={24} color={colorScheme?.icons} /> */}
-        </ToolBarButton>
-      </View>
+      <ToolBarButton onPressed={handleDelete}>
+        <Delete color={colors.icon} />
+      </ToolBarButton>
+      <ToolBarButton onPressed={handlePin}>
+        {!isPinned ? (
+          <Pin color={colors.icon} />
+        ) : (
+          <PinOff color={colors.icon} />
+        )}
+      </ToolBarButton>
+      <ToolBarButton onPressed={handleTags}>
+        <Tags color={colors.icon} />
+      </ToolBarButton>
+      <ToolBarButton onPressed={onClose}>
+        <Close color={colors.icon} />
+      </ToolBarButton>
     </View>
   );
 }

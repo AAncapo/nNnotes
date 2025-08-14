@@ -36,6 +36,7 @@ export default function NoteDetails() {
     handleUpdateBlock,
     handleDeleteBlock,
     handlePickImage,
+    handleSaveRecording,
     createdAt,
   } = useNote(id);
   const [isRecordingModalVisible, setIsRecordingModalVisible] = useState(false);
@@ -195,8 +196,6 @@ export default function NoteDetails() {
     [groupedContent, audioPlaying]
   );
 
-  // console.log(`id: ${id}`);
-
   if (!id) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-950">
@@ -262,10 +261,9 @@ export default function NoteDetails() {
       <AudioRecordingModal
         visible={isRecordingModalVisible}
         onClose={() => setIsRecordingModalVisible(false)}
-        onSave={(props) => {
+        onSave={async (props) => {
           setIsRecordingModalVisible(false);
-
-          addNewContentBlock(ContentType.AUDIO, [props]);
+          await handleSaveRecording(props);
         }}
       />
       <BlockOptionsModal

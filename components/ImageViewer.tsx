@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 
-import { ContentBlock } from "@/types";
+import { ContentBlock, SUPABASE_BUCKET } from "@/types";
+import { getCachePath } from "@/lib/supabase-storage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -81,7 +82,7 @@ export default function ImageViewer({
       statusBarTranslucent={true}
     >
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)" }}
+        style={{ flex: 1, paddingTop: 8, backgroundColor: "rgba(0,0,0,0.8)" }}
       >
         <View
           className="flex-row w-full items-center p-4 px-4"
@@ -111,7 +112,12 @@ export default function ImageViewer({
             onPress={handleTextVisibility}
           >
             <Image
-              source={{ uri: images[currentIndex].props.uri }}
+              source={{
+                uri: getCachePath(
+                  images[currentIndex].props.filename || "",
+                  SUPABASE_BUCKET.IMAGES
+                ),
+              }}
               className="w-full h-full"
               resizeMode="contain"
             />
