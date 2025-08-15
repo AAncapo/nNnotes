@@ -1,7 +1,8 @@
-import { create } from "zustand";
-import { ColorTheme } from "@/types";
-import { getData, storeData } from "@/lib/async-storage";
 import { Alert } from "react-native";
+
+import { create } from "zustand";
+import { ThemeOptions } from "@/types";
+import { getData, storeData } from "@/lib/async-storage";
 
 const STORAGE_KEY = "preferences";
 
@@ -9,21 +10,21 @@ type REC_QUALITY = "low" | "high";
 
 interface PreferencesState {
   loading: boolean;
-  theme: ColorTheme;
+  theme: ThemeOptions;
   experimentalEnabled: boolean;
   recordingQuality: REC_QUALITY;
-  setTheme: (newTheme: ColorTheme) => Promise<void>;
+  setTheme: (newTheme: ThemeOptions) => Promise<void>;
   setRecordingQuality: (recQuality: REC_QUALITY) => Promise<void>;
   initializePreferences: () => Promise<void>;
 }
 
 const usePreferencesStore = create<PreferencesState>()((set, get) => ({
   loading: false,
-  theme: "light",
+  theme: ThemeOptions.DEVICE,
   experimentalEnabled: false,
   recordingQuality: "low",
 
-  setTheme: async (theme: ColorTheme) => {
+  setTheme: async (theme: ThemeOptions) => {
     set({ theme });
     await storeData(STORAGE_KEY, { ...get(), theme });
   },

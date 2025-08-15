@@ -1,41 +1,35 @@
-# nNnotes - Minimalistic Note-Taking App
+# nNnotes 📝
 
-A sleek, minimalistic note-taking app that supports multiple data types in a single note. Built with React Native and Expo.
+A minimalistic, Apple Notes-inspired note-taking app for mobile (Android) and desktop. Designed for simplicity with powerful organization features.
 
-## Features
+## Features ✅
 
-✅ **Multi-format Notes**: Combine text, audio recordings, images, and checklists in a single note  
-✅ **Audio Recording**: Capture voice memos directly in your notes  
-✅ **Pinning**: Pin important notes for quick access  
-📱 **Platform**: Android  
-🎨 **Minimalist UI**: Clean, distraction-free interface
+### Currently Working
 
-## Coming Soon
+- 📴 Offline-first functionality
+- 🔐 User authentication
+- ☁️ Data sync with Supabase backend
+- ✏️ Create, update, and delete notes
+- 🖼️ Add images to notes
+- 🎤 Audio recordings in notes
+- 🗑️ Recycle bin for deleted notes
+- 🌗 Light/dark theme
+- 🔍 Search notes by name
+- 📌 Pin important notes
 
-🔜 Checklist functionality (currently in development)  
-🔜 Note tags
-🔜 Cloud sync
+### Coming Soon 🚧
 
-## Usage
+- [ ] Checklists/todo items
+- [ ] Swipe gestures (delete/pin/move)
+- [ ] Folder organization
+- [ ] Tag system with filtering
+- [ ] Desktop version
+- [ ] Reminders and notifications
+- [ ] Advanced text editing (fonts, sizes, etc.)
+- [ ] Integrated expense tracker
+      and more...
 
-- **Create a note**: Tap the '+' button
-- **Add content**: Tap anywhere inside a note to start writing text or use the toolbar to add images or start recording audio
-- **Pin notes**: Hold press on a note
-- **Delete notes**: Swipe right a note card
+## Known Issues ⚠️
 
-## Technologies Used
-
-- React Native
-- Expo
-- Expo Router
-- Expo AV (for audio recording)
-
-## Known Issues
-
-- Checklist functionality is incomplete
-- Some performance issues with large image notes
-- Audio playback controls need refinement
-
----
-
-_Created with ❤️ using React Native and Expo_
+- **Text Input Bug**: Large text inputs don't update height correctly when ending with a line break, preventing proper scrolling until fixed
+- **Audio Playback**: On mobile, audio recordings can't be replayed more than once (cause under investigation)

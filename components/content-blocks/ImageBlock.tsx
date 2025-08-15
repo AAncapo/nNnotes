@@ -26,12 +26,6 @@ interface ImageBlockProps {
   onSelected: (index: number) => void;
 }
 
-enum ImageStatus {
-  NULL = "null",
-  NOT_LOADED = "!loaded",
-  LOADED = "loaded",
-}
-
 export function ImageBlock({
   index,
   block,
@@ -44,18 +38,17 @@ export function ImageBlock({
   const [uri, setUri] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!block.props.filename) return;
+    const filename = block.props.filename;
+    if (!filename) return;
+    setIsLoading(true);
 
-    checkFileInCache(block.props.filename, SUPABASE_BUCKET.IMAGES).then(
-      (res) => {
-        if (res)
-          setUri(
-            res
-              ? getCachePath(block.props.filename || "", SUPABASE_BUCKET.IMAGES)
-              : null
-          );
-      }
-    );
+    checkFileInCache(filename)
+      .then((res) => {
+        if (res) setUri(res ? getCachePath(block.props.filename || "") : null);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const onDownload = async () => {
@@ -102,7 +95,9 @@ export function ImageBlock({
         ) : (
           <View className="w-full h-full items-center justify-center">
             {isLoading ? (
-              <ActivityIndicator size={24} color="white" />
+              <View style={styles.wrapperTouchable}>
+                <ActivityIndicator size={24} color="white" />
+              </View>
             ) : (
               <TouchableOpacity
                 style={styles.wrapperTouchable}

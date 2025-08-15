@@ -52,6 +52,7 @@ export function AudioBlock({
 
   const playSound = async () => {
     const uri = getCachePath(block.props.filename || "");
+    console.log(block.props.filename);
     if (!uri) return;
 
     // Only calls playbackStart if its neither playing or should play

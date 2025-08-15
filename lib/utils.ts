@@ -48,7 +48,7 @@ export function convertAndFormatUTC(utcDateTime: string, options = {}) {
 
 export const handleSyncNotes = async (
   updatedNotes: Note[]
-): Promise<Note[] | undefined | null> => {
+): Promise<Note[] | null> => {
   console.log("checking authentication...");
   const user = await useAuthStore.getState().getUser();
   if (!user) {
@@ -117,9 +117,7 @@ export const handleSyncNotes = async (
       // Remote version is newer
       notesToFetch.push(remoteNote);
       fetchUpdated++;
-      console.log(
-        `localNote: ${new Date(localNote.updatedAt)} -- remote: ${new Date(remoteNote.updated_at)}`
-      );
+      // console.log(`localNote: ${new Date(localNote.updatedAt)} -- remote: ${new Date(remoteNote.updated_at)}`);
     }
   }
 
@@ -198,7 +196,7 @@ export const handleSyncNotes = async (
       f.type === ContentType.IMAGE
         ? SUPABASE_BUCKET.IMAGES
         : SUPABASE_BUCKET.AUDIOS;
-    const ok = await checkFileInCache(f.props.filename || "", bucket);
+    const ok = await checkFileInCache(f.props.filename || "");
     if (!ok) filesToFetch.push({ filename: f.props.filename || "", bucket });
   }
   console.log(`found ${filesToFetch.length} files that need to be fetched`);
@@ -303,4 +301,6 @@ export const handleSyncNotes = async (
       );
     });
   }
+
+  return updatedNotes;
 };

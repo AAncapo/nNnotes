@@ -1,13 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import {
-  View,
-  Modal,
-  TouchableOpacity,
-  Text,
-  useColorScheme,
-  TextInput,
-} from "react-native";
+import { View, Modal, TouchableOpacity, Text, TextInput } from "react-native";
 
 import useRecorder from "@/hooks/useAudioRecorder";
 import { BlockProps } from "@/types";

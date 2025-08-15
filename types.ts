@@ -1,4 +1,9 @@
 export type ColorTheme = "light" | "dark";
+export enum ThemeOptions {
+  DEVICE = "device",
+  LIGHT = "light",
+  DARK = "dark",
+}
 
 export enum SUPABASE_BUCKET {
   IMAGES = "images",

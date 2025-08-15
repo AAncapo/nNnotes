@@ -164,7 +164,6 @@ export default function Notes() {
     hideToolbar();
   };
 
-  console.log(isPlatformWeb);
   return (
     <View
       className={`flex-1 ${isPlatformWeb && "flex-row"}`}
@@ -178,7 +177,7 @@ export default function Notes() {
         >
           <View className="p-2 pt-4 gap-2">
             <View className="flex-row items-center justify-between px-2">
-              {/* Folder */}
+              {/* Folder Name */}
               <Text
                 className={`text-5xl font-bold`}
                 style={{

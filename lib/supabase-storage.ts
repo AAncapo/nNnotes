@@ -4,8 +4,10 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { SUPABASE_BUCKET } from "@/types";
 
 // filename: noteId + filename
-export const getFilename = (noteId: string, assetUri: string) =>
-  `${noteId}+${assetUri.split("/").pop()}`;
+export const getFilenameFromPath = (path: string) => `${path.split("/").pop()}`;
+
+export const createFilename = (noteId: string, assetUri: string) =>
+  `${noteId}+${getFilenameFromPath(assetUri)}`;
 
 // Takes a file saved in cache and try to upload to supabase storage
 export const uploadFile = async (filename: string, bucket: SUPABASE_BUCKET) => {
@@ -123,12 +125,11 @@ export const getFile = async (
 
 export const checkFileInCache = async (
   filename: string,
-  bucket: SUPABASE_BUCKET
+  bucket?: SUPABASE_BUCKET
 ): Promise<boolean> => {
   try {
-    const fileInfo = await FileSystem.getInfoAsync(
-      getCachePath(filename, bucket)
-    );
+    const path = getCachePath(filename);
+    const fileInfo = await FileSystem.getInfoAsync(path);
     return fileInfo.exists;
   } catch (error) {
     console.error("Error checking cache:", error);
@@ -139,10 +140,10 @@ export const checkFileInCache = async (
 export const saveFileToCache = async (
   uri: string, // origen
   filename: string, // nombre que tendrá el archivo en el sistema
-  bucket: SUPABASE_BUCKET
+  bucket?: SUPABASE_BUCKET
 ): Promise<string | null> => {
   try {
-    let path: string = getCachePath(filename, bucket);
+    let path: string = getCachePath(filename);
     await FileSystem.copyAsync({
       from: uri,
       to: path,
@@ -156,10 +157,10 @@ export const saveFileToCache = async (
 };
 
 // Helpers
-export const getCachePath = (filename: string, bucket?: SUPABASE_BUCKET) =>
-  `${FileSystem.cacheDirectory}files/${filename}`;
-
 export const getCacheDirectory = () => `${FileSystem.cacheDirectory}files/`;
+
+export const getCachePath = (filename: string, bucket?: SUPABASE_BUCKET) =>
+  `${getCacheDirectory()}${filename}`;
 
 // old cachePath: `${FileSystem.cacheDirectory}${bucket}/${filename}`;
 export const getSupabasePath = async (filename: string) => {

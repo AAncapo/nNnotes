@@ -17,13 +17,13 @@ function SearchBar({ value, onQueryUpdate }: SearchBarProps) {
       className="w-full rounded-full relative items-center flex-row ps-3"
       style={{ backgroundColor: colors.searchbar }}
     >
-      <Search color={colors.iconSecondary} />
+      <Search color={colors.iconSecondary} size={22} />
       <TextInput
         ref={inputRef}
         value={value}
         placeholder="Search notes by title ..."
         onChangeText={onQueryUpdate}
-        className="px-4 ps-2 w-full"
+        className="p-3 ps-2 w-full text-base"
         style={{ color: colors.text }}
         placeholderTextColor={"gray"}
       />
@@ -35,7 +35,7 @@ function SearchBar({ value, onQueryUpdate }: SearchBarProps) {
             inputRef.current && inputRef.current.blur();
           }}
         >
-          <Close size={18} />
+          <Close size={18} color={colors.icon} />
         </Pressable>
       )}
     </View>

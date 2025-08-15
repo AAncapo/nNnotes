@@ -1,19 +1,20 @@
-import usePreferencesStore from "@/store/usePreferencesStore";
-import { ColorTheme } from "@/types";
 import { useColorScheme } from "react-native";
 
-export default function useTheme(soft?: boolean) {
+import { ColorTheme, ThemeOptions } from "@/types";
+import usePreferencesStore from "@/store/usePreferencesStore";
+
+export default function useTheme() {
   const { theme, setTheme } = usePreferencesStore();
   const colorScheme = useColorScheme();
 
-  const changeTheme = async (newTheme: ColorTheme | "device") => {
-    setTheme(newTheme === "device" ? colorScheme || "light" : newTheme);
+  const getTheme = (): ColorTheme => {
+    return theme === ThemeOptions.DEVICE ? colorScheme || "light" : theme;
   };
 
-  return { colors: Colors(theme, soft), theme, changeTheme };
+  return { colors: Colors(getTheme()), theme: getTheme(), setTheme };
 }
 
-const Colors = (theme: ColorTheme, soft?: boolean) => {
+const Colors = (theme: ColorTheme) => {
   return {
     background: theme === "dark" ? "#111827" : "white",
     secondary: theme === "dark" ? "#030712" : "#f8fafc",

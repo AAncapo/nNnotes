@@ -16,7 +16,11 @@ import {
   getRandomID,
   isPlatformWeb,
 } from "@/lib/utils";
-import { getFilename, saveFileToCache } from "@/lib/supabase-storage";
+import {
+  createFilename,
+  getFilenameFromPath,
+  saveFileToCache,
+} from "@/lib/supabase-storage";
 
 const textPlaceholder = "Start writing ...";
 
@@ -30,7 +34,7 @@ function useNote(id?: string) {
     deleteNote,
     folders,
     tags,
-    setTags,
+    // setTags,
     selectedFolder,
     syncNotes,
     loading,
@@ -143,15 +147,12 @@ function useNote(id?: string) {
         });
         break;
       case ContentType.AUDIO:
-        console.log("saving audio...", props[0].uri);
         newBlocks = [
           {
             id: getRandomID(),
             type,
             props: {
-              title: props[0].title,
-              uri: props[0].uri,
-              duration: props[0].duration,
+              ...props[0],
               createdAt: getDateISOString(),
             },
             updatedAt: getDateISOString(),
@@ -207,17 +208,18 @@ function useNote(id?: string) {
 
     if (!result.canceled) {
       const promises = result.assets.map((asset) => {
-        const filename = getFilename(note.id, asset.uri);
-        return saveFileToCache(asset.uri, filename, SUPABASE_BUCKET.IMAGES);
+        const filename = createFilename(note.id, asset.uri);
+        return saveFileToCache(asset.uri, filename);
       });
 
       Promise.all(promises).then((results) => {
         addNewContentBlock(
           ContentType.IMAGE,
           results.map((cachePath) => {
+            const filename = getFilenameFromPath(cachePath!);
             return {
               text: "Image",
-              filename: getFilename(note.id, cachePath!),
+              filename,
               uri: cachePath!,
             };
           })
@@ -229,15 +231,11 @@ function useNote(id?: string) {
   const handleSaveRecording = async (props: Partial<BlockProps>) => {
     if (!note || !props.uri) return;
 
-    const filename = getFilename(note.id, props.uri);
-    const cachePath = await saveFileToCache(
-      props.uri,
-      filename,
-      SUPABASE_BUCKET.AUDIOS
-    );
+    const filename = createFilename(note.id, props.uri);
+    const uri = await saveFileToCache(props.uri, filename);
 
-    if (cachePath)
-      addNewContentBlock(ContentType.AUDIO, [{ ...props, uri: cachePath }]);
+    if (uri)
+      addNewContentBlock(ContentType.AUDIO, [{ ...props, uri, filename }]);
   };
 
   const handleUpdateBlock = (updatedBlock: ContentBlock) => {
