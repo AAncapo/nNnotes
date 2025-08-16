@@ -11,7 +11,6 @@ interface BlockOptionsModalProps {
   visible: boolean;
   onClose: () => void;
   onDelete: (id: string) => void;
-  editBlockProps: (id: string, name: string) => void;
 }
 
 function BlockOptionsModal({
@@ -20,7 +19,6 @@ function BlockOptionsModal({
   type,
   onClose,
   onDelete,
-  editBlockProps,
 }: BlockOptionsModalProps) {
   const { colors } = useTheme();
 
@@ -45,20 +43,6 @@ function BlockOptionsModal({
               </Text>
             </TouchableOpacity>
           </View>
-          {type === ContentType.AUDIO && (
-            <TouchableOpacity
-              className="items-center justify-center gap-2 rounded-xl p-4"
-              style={{ backgroundColor: colors.button }}
-              onPress={() => editBlockProps(id, "title")}
-            >
-              <Text
-                className="text-xl text-center font-semibold"
-                style={{ color: colors.buttonText }}
-              >
-                Editar título
-              </Text>
-            </TouchableOpacity>
-          )}
           <TouchableOpacity
             className="flex-row items-center justify-center gap-2 border-2 border-red-500 rounded-xl p-4"
             onPress={() => {

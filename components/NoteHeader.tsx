@@ -42,16 +42,12 @@ function NoteHeader({
           className={`flex-row items-center`}
           style={{ backgroundColor: colors.secondary }}
         >
-          {/* <ToolBarButton
+          <ToolBarButton
             type={ContentType.CHECKLIST}
             onSelected={onAddContentBlock}
           >
-            <Ionicons
-              name="checkbox-outline"
-              size={22}
-              color={colors.icons}
-            />
-          </ToolBarButton> */}
+            <Ionicons name="checkbox-outline" size={22} color={colors.icon} />
+          </ToolBarButton>
           <ToolBarButton
             type={ContentType.AUDIO}
             onSelected={onAddContentBlock}

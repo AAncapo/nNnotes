@@ -1,26 +1,31 @@
-/* eslint-disable prettier/prettier */
-import useTheme from "@/hooks/useTheme";
 import { useCallback, useMemo } from "react";
 import { View } from "react-native";
+
 import { ChecklistItem, ContentBlock } from "types";
+import useTheme from "@/hooks/useTheme";
 import ListItem from "./ListItem";
 
 interface ChecklistBlockProps {
   block: ContentBlock;
   onUpdate: (block: ContentBlock) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
+export function ChecklistBlock({
+  block,
+  onUpdate,
+  onDelete,
+}: ChecklistBlockProps) {
   const { colors } = useTheme();
-  const { items, title } = block.props;
+  const { items } = block.props;
 
-  const uncheckedItems = useMemo(() => {
-    return items?.filter((i) => !i.checked) || [];
-  }, [items]);
+  // const uncheckedItems = useMemo(() => {
+  //   return items!.filter((i) => !i.checked) || [];
+  // }, [items]);
 
-  const checkedItems = useMemo(() => {
-    return items?.filter((i) => i.checked) || [];
-  }, [items]);
+  // const checkedItems = useMemo(() => {
+  //   return items!.filter((i) => i.checked) || [];
+  // }, [items]);
 
   const renderChecklistItem = useCallback(
     ({ item, index }: { item: ChecklistItem; index: number }) => {
@@ -41,15 +46,12 @@ export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
     [items]
   );
 
-  // const handleTitleChange = (title: string) =>
-  //   onUpdate({ ...block, props: { ...block.props, title } });
-
   const onItemCheck = (itemId: string) =>
     onUpdate({
       ...block,
       props: {
         ...block.props,
-        items: items?.map((item) =>
+        items: items!.map((item) =>
           item.id === itemId ? { ...item, checked: !item.checked } : item
         ),
       },
@@ -60,37 +62,55 @@ export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
       ...block,
       props: {
         ...block.props,
-        items: items?.map((item) =>
+        items: items!.map((item) =>
           item.id === itemId ? { ...item, text } : item
         ),
       },
     });
 
-  const addItem = (currentIndex: number) => {
+  const addItem = (id: string) => {
+    const currentIndex = items!.findIndex((i) => i.id === id);
+    if (currentIndex === -1) return;
+
+    // Clear focus from all items first
+    const clearedFocusItems = items!.map((item) => ({
+      ...item,
+      focus: false,
+    }));
+
+    const updatedItems = [
+      ...clearedFocusItems.slice(0, currentIndex + 1),
+      { id: new Date().toString(), checked: false, text: "", focus: true },
+      ...clearedFocusItems.slice(currentIndex + 1),
+    ];
+
     onUpdate({
       ...block,
       props: {
         ...block.props,
-        items: [
-          ...items!.slice(0, currentIndex + 1),
-          { id: new Date().toString(), checked: false, text: "", focus: true },
-          ...items!.slice(currentIndex + 1),
-        ],
+        items: [...updatedItems],
       },
     });
   };
 
   const removeItem = (index: number) => {
-    if (!items) return;
-    if (items!.length <= 1) return; // No eliminar el último elemento
+    // Eliminar contentBlock por completo, si no queda mas nada
+    if (items!.length <= 1) {
+      onDelete(block.id);
+      return;
+    }
 
-    // Enfocar el elemento anterior después de eliminar
-    const newItems = items.map((item, index) => {
-      return index === index - 1 ? { ...item, focus: true } : item;
-    });
+    // Clear all focus first
+    const newItems = items!
+      .map((item) => ({
+        ...item,
+        focus: false,
+      }))
+      .filter((_, i) => i !== index);
 
-    // Remueve item
-    newItems.splice(index, 1);
+    // Set focus to previous item
+    if (index > 0) newItems[index - 1].focus = true;
+
     onUpdate({
       ...block,
       props: {
@@ -102,28 +122,12 @@ export function ChecklistBlock({ block, onUpdate }: ChecklistBlockProps) {
 
   return (
     <View className="py-2">
-      {/* <TextInput
-        className="text-base font-semibold"
-        defaultValue={title}
-        placeholder="Título..."
-        placeholderTextColor={"gray"}
-        onChangeText={handleTitleChange}
-        onSubmitEditing={() => {
-          // Enfocar primer item si esta vacio
-          if (items?.length === 1 && items[0].text.length === 0) {
-            // TODO
-          }
-        }}
-        style={{ color: _colors?.text }}
-      /> */}
-      {uncheckedItems.map((item, index) =>
-        renderChecklistItem({ item, index })
-      )}
-      <View
+      {items!.map((item, index) => renderChecklistItem({ item, index }))}
+      {/* <View
         className={`h-[1px] w-5/6 self-center rounded-full opacity-10 my-1`}
         style={{ backgroundColor: colors.separator }}
       />
-      {checkedItems.map((item, index) => renderChecklistItem({ item, index }))}
+      {checkedItems.map((item, index) => renderChecklistItem({ item, index }))} */}
     </View>
   );
 }

@@ -28,7 +28,7 @@ export function AudioRecordingModal({
     pauseRecording,
     resumeRecording,
   } = useRecorder();
-  const [title, setTitle] = useState<string>("");
+  // const [title, setTitle] = useState<string>("");
 
   const handleSave = async () => {
     if (!recording) return;
@@ -37,7 +37,7 @@ export function AudioRecordingModal({
 
     const uri = recording.getURI();
     if (uri) {
-      onSave({ uri, duration, title });
+      onSave({ uri, duration });
     }
   };
 
@@ -67,13 +67,13 @@ export function AudioRecordingModal({
           style={{ backgroundColor: colors.background }}
         >
           <View className="mb-6 items-center">
-            <TextInput
+            {/* <TextInput
               className="mb-2 w-full rounded-md border border-slate-200 p-2 text-center text-xl"
               style={{ color: colors.text }}
               placeholder="Título"
               placeholderTextColor={"#eee"}
               onChangeText={setTitle}
-            />
+            /> */}
             <Text
               className={`text-xl font-bold`}
               style={{ color: colors.text }}

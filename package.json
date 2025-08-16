@@ -1,6 +1,6 @@
 {
   "name": "nnnotes",
-  "version": "0.1.2",
+  "version": "0.1.2a",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

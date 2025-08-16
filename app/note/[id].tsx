@@ -3,11 +3,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
-  useColorScheme,
   FlatList,
   BackHandler,
   Text,
   View,
+  TouchableOpacity,
 } from "react-native";
 
 import { ContentBlock, ContentType } from "@/types";
@@ -61,10 +61,6 @@ export default function NoteDetails() {
   const handleOpenOptionsModal = (id: string) => {
     setOptionsId(id);
     setOptionsModalVisible(true);
-  };
-
-  const handleEditBlockProps = (id: string, name: string) => {
-    // Modal de edicion de props
   };
 
   const onToolbarOptionSelected = (type: ContentType) => {
@@ -175,6 +171,7 @@ export default function NoteDetails() {
               key={blockOrGroup.id}
               block={blockOrGroup}
               onUpdate={handleUpdateBlock}
+              onDelete={handleDeleteBlock}
             />
           );
         case ContentType.AUDIO:
@@ -272,7 +269,6 @@ export default function NoteDetails() {
         visible={optionsModalVisible}
         onClose={() => setOptionsModalVisible(false)}
         onDelete={handleDeleteBlock}
-        editBlockProps={handleEditBlockProps}
       />
     </View>
   );

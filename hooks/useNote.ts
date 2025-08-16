@@ -3,13 +3,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { useNotesStore } from "@/store/useNotesStore";
-import {
-  BlockProps,
-  ContentBlock,
-  ContentType,
-  Note,
-  SUPABASE_BUCKET,
-} from "@/types";
+import { BlockProps, ContentBlock, ContentType, Note } from "@/types";
 import {
   getDateISOString,
   getNewNoteID,

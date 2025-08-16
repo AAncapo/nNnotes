@@ -8,7 +8,7 @@ interface ListItemProps {
   item: ChecklistItem;
   index: number;
   colorScheme: any;
-  addItem: (index: number) => void;
+  addItem: (id: string) => void;
   removeItem: (id: number) => void;
   onItemCheck: (id: string) => void;
   onItemChangeText: (id: string, text: string) => void;
@@ -28,7 +28,9 @@ function ListItem({
 
   useEffect(() => {
     if (focus && inputRef.current) {
-      inputRef.current.focus();
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     }
   }, [focus]);
 
@@ -51,10 +53,13 @@ function ListItem({
         }}
         value={item.text}
         onChangeText={(text) => onItemChangeText(item.id, text)}
-        onSubmitEditing={() => addItem(index)}
+        onSubmitEditing={() => {
+          addItem(item.id);
+          inputRef.current?.blur();
+        }}
         onKeyPress={(e) => {
-          if (e.nativeEvent.key === "Backspace") {
-            if (item.text.length === 0 && index !== 0) removeItem(index);
+          if (e.nativeEvent.key === "Backspace" && item.text.length === 0) {
+            removeItem(index);
           }
         }}
       />

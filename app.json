@@ -2,7 +2,7 @@
   "expo": {
     "name": "nNnotes",
     "slug": "nNnotes",
-    "version": "0.1.2",
+    "version": "0.1.2a",
     "scheme": "nNnotes",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

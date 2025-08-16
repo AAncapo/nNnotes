@@ -15,13 +15,13 @@ import { Back } from "@/components/common/Icons";
 import useTheme from "@/hooks/useTheme";
 import { isPlatformWeb } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
-import { ColorTheme } from "@/types";
+import { ThemeOptions } from "@/types";
 import { useNotesStore } from "@/store/useNotesStore";
 
 export const themeOptions = ["device", "light", "dark"];
 
 function Settings() {
-  const { theme, colors, changeTheme } = useTheme();
+  const { theme, colors, setTheme } = useTheme();
   const { user, signOut } = useAuthStore();
   const { folders, selectFolder, getNoteByFolder, syncNotes, loading } =
     useNotesStore();
@@ -141,9 +141,9 @@ function Settings() {
           )}
         </View>
         {/* Theme Selector */}
-        <View className="flex-row justify-between items-center p-2">
+        <View className="flex-row justify-between items-center">
           <Text
-            className="flex-1 text-lg font-semibold"
+            className="flex-1 text-xl font-semibold"
             style={{ color: colors.text }}
           >
             Appearance
@@ -152,7 +152,7 @@ function Settings() {
             mode="dropdown"
             selectedValue={theme}
             onValueChange={(value) =>
-              changeTheme(value.toLowerCase() as ColorTheme | "device")
+              setTheme(value.toLowerCase() as ThemeOptions)
             }
             dropdownIconColor={colors.icon}
             selectionColor={colors.secondary}
@@ -207,6 +207,7 @@ function Settings() {
           ))}
         </View>
       </ScrollView>
+      <Text className="text-center text-gray-500 p-4">version 0.1.2a</Text>
     </View>
   );
 }
